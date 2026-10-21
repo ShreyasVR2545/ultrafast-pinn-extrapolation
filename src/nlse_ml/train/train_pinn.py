@@ -9,7 +9,8 @@ Loss = w_ic * [mean (u - u0)^2 + mean (v - v0)^2]  +  w_r * [mean f^2 + mean g^2
 * pinn_plus adds (each toggleable): periodic Fourier features in tau, causal weights in xi
   (Wang, Sankaran & Perdikaris; weights detached, epsilon annealed [1e-2 .. 1e2], stage advances
   when min w > 0.99), and gradient-norm loss balancing (EMA 0.9, every `adapt_every` steps).
-  During L-BFGS, causal weighting is off and the adaptive weights are frozen.
+  During L-BFGS the adaptive weights are frozen; causal weighting continues at the reached epsilon
+  only if plus.causal_lbfgs is true.
 """
 from __future__ import annotations
 
@@ -21,6 +22,17 @@ from ..models.mlp import FourierMLP, MLP
 from ..models.pinn import residual
 from ..physics.nlse import initial_condition
 from .common import Schedule, fit, lhs
+
+
+def focus_tau(tau, focus, tau_max, rng):
+    """Optional sampling-density change: replace a fraction `frac` of the tau samples by draws from a
+    centred normal of width `sigma` (clipped to the window). None -> uniform (unchanged)."""
+    if not focus:
+        return tau
+    k = rng.random(tau.size) < focus["frac"]
+    tau = tau.copy()
+    tau[k] = np.clip(rng.normal(0.0, focus["sigma"], k.sum()), -tau_max, tau_max)
+    return tau
 
 
 def build_model(cfg: dict, regime: str, exp: str, device) -> torch.nn.Module:
@@ -52,6 +64,7 @@ class PINNLoss:
         self.w_r = float(cfg["loss"].get("w_r", 1.0))
         p = cfg.get("plus", {})
         self.causal = p.get("causal", False)
+        self.causal_lbfgs = p.get("causal_lbfgs", False)  # keep causal weights (at the reached epsilon) in L-BFGS
         self.eps_list = list(p.get("causal_eps", [1e-2, 1e-1, 1.0, 10.0, 100.0]))
         self.n_bins = int(p.get("causal_bins", 32))
         self.eps_stage, self.stage_steps = 0, 0
@@ -65,7 +78,9 @@ class PINNLoss:
         c = self.cfg["sampling"]
         n_col = c["n_col_lbfgs"] if phase == "lbfgs" else c["n_col"]
         X = lhs(n_col, [self.xi_lo, -self.tau_max, self.n_lo], [self.xi_hi, self.tau_max, self.n_hi], self.rng)
+        X[:, 1] = focus_tau(X[:, 1], c.get("tau_focus"), self.tau_max, self.rng)
         T = lhs(c["n_ic"], [-self.tau_max, self.n_lo], [self.tau_max, self.n_hi], self.rng)
+        T[:, 0] = focus_tau(T[:, 0], c.get("tau_focus"), self.tau_max, self.rng)
         u0 = initial_condition(self.rc["pulse"], T[:, 0])
         Xic = np.column_stack([np.full(len(T), self.xi_lo), T])
         f = lambda a: torch.as_tensor(a, dtype=torch.float32, device=self.dev)
@@ -80,7 +95,7 @@ class PINNLoss:
         r2 = self.residual_terms(X)
         L_ic = ((self.m(Xic) - Y0) ** 2).mean(0).sum()
         parts = {}
-        if self.causal and phase == "adam":
+        if self.causal and (phase == "adam" or self.causal_lbfgs):
             eps = self.eps_list[self.eps_stage]
             idx = ((X[:, 0] - self.xi_lo) / (self.xi_hi - self.xi_lo) * self.n_bins).long().clamp(0, self.n_bins - 1)
             Lb = torch.zeros(self.n_bins, device=X.device).scatter_add_(0, idx, r2[:, 0])
