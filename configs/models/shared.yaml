@@ -1,0 +1,15 @@
+# Shared by pinn_strict, pinn_extended, pinn_plus and dd_mlp (fairness: identical trunk + schedule).
+# cfno/cfno_ar use the same total optimizer-step budget (adam_steps + lbfgs_steps, Adam only).
+arch: {width: 100, depth: 4, act: tanh}
+schedule:
+  adam_steps: 10000
+  lr: 1.0e-3
+  lr_final: 1.0e-4
+  resample_every: 100
+  lbfgs_steps: 2000
+  lbfgs_history: 50
+  log_every: 100
+sampling:
+  n_col: 20000        # collocation (PINN) / data points (DD-MLP) per Adam batch
+  n_col_lbfgs: 20000  # fixed batch for L-BFGS
+  n_ic: 1024          # IC points per batch (PINN family only)

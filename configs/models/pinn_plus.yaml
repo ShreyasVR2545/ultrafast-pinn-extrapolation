@@ -1,0 +1,12 @@
+# PINN+ (Fourier features in tau, causal weights in xi, adaptive loss weights). Inherits shared.yaml.
+loss: {w_ic: 10.0, w_r: 1.0}
+deriv_mode: taylor
+collocation: strict
+plus:
+  fourier_features: true
+  n_harmonics: 48         # harmonics k = 1..48 of 2*pi/L (L = tau window)
+  causal: true
+  causal_bins: 32
+  causal_eps: [0.01, 0.1, 1.0, 10.0, 100.0]
+  adaptive_weights: true
+  adapt_every: 100
