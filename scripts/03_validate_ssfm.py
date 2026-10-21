@@ -125,7 +125,9 @@ def validation_figure(grids, out):
         err = [rel_l2(run(shape, s, N, g["tau_max"], g["n_tau"], h, n_save=5)[2], ref) for h in hs]
         a.loglog(hs, err, marker="os^"[k], color=style.PALETTE[k], label=lab)
     a.loglog(hs, 0.5 * err[0] * (hs / hs[0]) ** 2, color=style.INK2, ls=":", lw=1, label=r"slope 2")
-    a.axvline(grids["B"]["dxi"], color=style.INK2, lw=0.8, ls="--")
+    for reg, lsty, ytxt in (("A", "--", 1e-2), ("B", "-.", 2e-7)):
+        a.axvline(grids[reg]["dxi"], color=style.INK2, lw=0.8, ls=lsty)
+        a.text(grids[reg]["dxi"] * 1.1, ytxt, f"chosen, {reg}", color=style.INK2, fontsize=7)
     a.set(xlabel=r"step $\Delta\xi$", ylabel="rel. L2 error vs fine reference", title="(a) SSFM convergence")
     a.legend()
     # (b) conservation along xi at the chosen grid
@@ -151,7 +153,8 @@ def validation_figure(grids, out):
         c.semilogy(xi, np.maximum(ef, 1e-30), color=style.PALETTE[k], ls=":", lw=1.2)
     c.axhline(TOL, color=style.INK2, lw=0.8, ls="--")
     c.set(xlabel=r"$\xi$", ylabel="energy fraction in outer 5%", title="(c) Window adequacy (solid τ, dotted ω)")
-    c.legend(fontsize=6.5)
+    c.text(0.05, TOL * 1.5, "1e-6 limit", color=style.INK2, fontsize=7)
+    c.legend(fontsize=6.5, loc="center left")
     # (d) analytic checks
     d = ax[1, 1]
     tau, _ = tau_grid(1024, 40.0)
@@ -189,8 +192,11 @@ def gallery(grids):
         fig, ax = plt.subplots(1, 2, figsize=(9, 3.4))
         tl = min(g["tau_max"], 12 if reg == "B" else 45)
         m = np.abs(tau) <= tl
-        im = ax[0].pcolormesh(tau[m], xi, I[:, m], shading="auto", cmap=style.SEQ_CMAP, rasterized=True)
-        fig.colorbar(im, ax=ax[0], label=r"$|U|^2$")
+        from matplotlib.colors import PowerNorm
+
+        im = ax[0].pcolormesh(tau[m], xi, I[:, m], shading="auto", cmap=style.SEQ_CMAP, rasterized=True,
+                              norm=PowerNorm(0.4, vmin=0, vmax=I.max()))
+        fig.colorbar(im, ax=ax[0], label=r"$|U|^2$ (power-law colour scale, $\gamma$ = 0.4)")
         ax[0].set(xlabel=r"$\tau = T/T_0$", ylabel=r"$\xi = z/L_D$", title="Intensity")
         wl = 25 if reg == "B" else 15
         mw = np.abs(omega) <= wl
@@ -210,10 +216,13 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--smoke", action="store_true")
     ap.add_argument("--gallery-only", action="store_true")
+    ap.add_argument("--figures-only", action="store_true", help="redo all figures from configs/grid.yaml")
     a = ap.parse_args()
     t0 = time.time()
-    if a.gallery_only:
+    if a.gallery_only or a.figures_only:
         grids = yaml.safe_load((ROOT / "configs" / "grid.yaml").read_text())["regimes"]
+        if a.figures_only:
+            validation_figure(grids, ROOT / "figures" / "ssfm_validation")
         gallery(grids)
         return
     recs = {reg: study_regime(reg, a.smoke) for reg in ("A", "B")}

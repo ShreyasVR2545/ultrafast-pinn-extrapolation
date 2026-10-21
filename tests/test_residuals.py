@@ -56,3 +56,19 @@ def test_taylor_mode_equals_autograd(act):
         fa, ga = residual(m, x, s, "autograd")
         ft, gt = residual(m, x, s, "taylor")
         assert torch.allclose(fa, ft, atol=1e-12) and torch.allclose(ga, gt, atol=1e-12)
+
+
+def test_taylor_mode_equals_autograd_fourier_features():
+    from nlse_ml.models.mlp import FourierMLP
+
+    torch.manual_seed(0)
+    m = FourierMLP(3, 2, 64, 3, "tanh", lb=[0, -10, 1], ub=[2, 10, 2], n_harmonics=8, period=20.0).double()
+    xi, tau = _pts(500)
+    x = torch.cat([xi, tau, 1 + torch.rand_like(xi)], 1)
+    fa, ga = residual(m, x, 1, "autograd")
+    ft, gt = residual(m, x, 1, "taylor")
+    assert torch.allclose(fa, ft, atol=1e-12) and torch.allclose(ga, gt, atol=1e-12)
+    # exact periodicity in tau with period L
+    x2 = x.clone()
+    x2[:, 1] += 20.0
+    assert torch.allclose(m(x), m(x2), atol=1e-10)
