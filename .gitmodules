@@ -1,0 +1,3 @@
+[submodule "third_party/fiber-nlse-pinn"]
+	path = third_party/fiber-nlse-pinn
+	url = https://github.com/xieyulai/fiber-nlse-pinn
