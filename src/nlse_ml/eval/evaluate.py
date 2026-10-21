@@ -33,10 +33,12 @@ def evaluate(predict_fn, regime: str, exp: str, residual_fn=None) -> tuple[dict,
             f = load_eval_field(regime, N)
             m = xi_mask(f.xi, exp)
             xi_e = f.xi[m]
+            # Predict on the FULL xi grid (for per-slice plots, e.g. z_extrap error growth across xi = 2);
+            # all scalar metrics below use only the pre-registered evaluation slices (mask m).
             t0 = time.perf_counter()
-            P = predict_fn(N, xi_e, f.tau, f.U[0])
+            P_full = predict_fn(N, f.xi, f.tau, f.U[0])
             t_inf.append(time.perf_counter() - t0)
-            T = f.U[m]
+            P, T = P_full[m], f.U[m]
             fm = M.field_metrics(P, T, xi_e, f.tau, s, N)
             fm["split"] = split
             if not np.all(np.isfinite(P)):
@@ -44,9 +46,9 @@ def evaluate(predict_fn, regime: str, exp: str, residual_fn=None) -> tuple[dict,
             if residual_fn is not None:
                 fm["autograd_residual_rms"] = residual_fn(N, (float(xi_e.min()), float(xi_e.max())))
             per_N[f"{N:.4f}"] = fm
-            ps = M.per_slice(P, T, f.tau, s, N)
-            per_slice[f"{N:.4f}"] = {"xi": xi_e.tolist(), **{k: np.asarray(v).tolist() for k, v in ps.items()}}
-            preds[f"N_{N:.4f}"] = P.astype(np.complex64)
+            ps = M.per_slice(P_full, f.U, f.tau, s, N)
+            per_slice[f"{N:.4f}"] = {"xi": f.xi.tolist(), **{k: np.asarray(v).tolist() for k, v in ps.items()}}
+            preds[f"N_{N:.4f}"] = P_full.astype(np.complex64)
     per_split = {}
     for split in {v["split"] for v in per_N.values()}:
         rows = [v for v in per_N.values() if v["split"] == split]
