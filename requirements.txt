@@ -1,0 +1,11 @@
+# Python 3.12. Install torch first from the CUDA 12.8 index (needed for RTX 50xx / sm_120):
+#   pip install torch==2.7.1 --index-url https://download.pytorch.org/whl/cu128
+# (CPU-only / Colab: plain `pip install torch==2.7.1` is fine.)
+torch==2.7.1
+numpy==2.2.6
+scipy==1.15.3
+matplotlib==3.10.3
+pyyaml==6.0.2
+pytest==8.4.1
+pandas==2.3.1
+neuraloperator==1.0.2

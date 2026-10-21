@@ -1,0 +1,15 @@
+{
+  "device": "cuda",
+  "n_col": 50000,
+  "ssfm_s_dxi1e-3": 0.1495926000061445,
+  "pinn_f32_adam_sps": 18.06195151830122,
+  "pinn_f32_lbfgs_sps": 10.969325870972458,
+  "pinn_f32_mem_gb": 1.789820928,
+  "pinn_f64_adam_sps": 1.4972345975918677,
+  "pinn_f64_lbfgs_sps": 0.9923903409418472,
+  "pinn_f64_mem_gb": 3.40116224,
+  "pinn_taylor_adam_sps": 25.30427377039432,
+  "pinn_taylor_lbfgs_sps": 15.359504956446193,
+  "dd_adam_sps": 231.99759558345835,
+  "fno_sps": 72.00116584303731
+}

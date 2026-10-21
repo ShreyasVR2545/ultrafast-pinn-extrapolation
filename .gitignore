@@ -1,0 +1,24 @@
+# environments
+.venv/
+venv/
+.env
+.env.*
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ipynb_checkpoints/
+
+# large / generated
+/data/
+/runs/
+report/papers/
+*.npz
+*.pt
+*.pth
+*.ckpt
+
+# editor / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
