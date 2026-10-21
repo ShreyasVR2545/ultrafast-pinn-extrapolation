@@ -34,3 +34,22 @@
 **Key results:** remote https://github.com/ShreyasVR2545/ultrafast-pinn-extrapolation. Teammate invite skipped (no username given).
 **Commits:** `chore: scaffold repo structure, env check, benchmark scripts`; `docs(lit): literature notes, references and brief corrections`; `chore: add starter repo as pinned submodule`. Pushed: y.
 **Next:** Phase 2, audit the starter repo and reproduce fig3, fig7 and fig8.
+
+## Checkpoint 3: Independent ground truth (SSFM) and validation (2026-10-22)
+**Status:** done
+**What I did:** Symmetric SSFM + RK4IP (float64), analytic solutions, E/P/H. `tests/test_physics.py` has 14 tests. Grid study `scripts/03_validate_ssfm.py` produces `configs/grid.yaml`, `results/grid_study.json`, `figures/ssfm_validation.png` and 6 gallery figures (`figures/gallery_*.png`).
+**Key results:** All physics tests pass: GVD analytic error <1e-8, N=1 soliton over 4 periods <1e-6, N=2 recurrence <1e-6, Hamiltonian drift <1e-6, second-order convergence, RK4IP agreement <1e-6. The starter repo's SSFM agrees to <1e-4, limited by its dz=2e-3. Chosen grids are in D-017. Every criterion is <1e-6 on the hardest cases.
+**Sanity checks:** the N=2 soliton compresses at ξ≈π/4+kπ/2 (gallery_B_N2). Regime A N=4 shows the expected SPM broadening and saturation in normal dispersion.
+**Problems / surprises:** two tests needed corrected setups, not looser tolerances (D-018).
+**Commits:** physics tests, residual tests, grid study, figures. Merged to main, tag `m1-ground-truth`, pushed: y.
+
+## Checkpoint 4: Datasets and pre-registered splits (2026-10-22)
+**Status:** done
+- `configs/splits.yaml` was committed in 278e132, before any model training.
+- `scripts/04_generate_data.py` produced 37 fields (A: 15, B_sech: 11, B_gauss: 11), 146 MB, in 126 s wall with 6 workers. Zero grid-quality failures (edge energy, H drift <1e-6 for every field). Details in `results/data_summary.json`.
+- `tests/test_splits.py` covers disjoint splits, a training loader that refuses test N and mislabelled files, the ξ≤2 mask for z_extrap, and a check that train/ never imports the eval loader.
+
+## Checkpoint 5: Metrics and evaluation library (2026-10-22)
+**Status:** done
+- `eval/metrics.py`: field, intensity, phase and spectral errors, observables, and drift and grid-residual physics checks. `eval/spectral_shift.py`: WF distance and SPM predictor. `tests/test_metrics.py` has 10 tests (identical fields give 0, phase offset, shifted Gaussians give W = shift, analytic drift ≈ 0, observables vs closed form).
+- `eval/evaluate.py`, `eval/aggregate.py` (tidy CSVs), `scripts/make_tables.py` (md + LaTeX, mean ± std and median over seeds), `scripts/run_sweep.py` (resumable).
