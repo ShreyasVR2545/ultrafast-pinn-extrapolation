@@ -1,0 +1,6 @@
+# Conditional FNO; schedule budget from shared.yaml (adam_steps + lbfgs_steps, Adam only).
+arch: {n_modes: 128, hidden: 64, n_layers: 4}
+batch_size: 32
+variants:
+  cfno: {variant: direct}
+  cfno_ar: {variant: ar, k_out: 5, noise_std: 1.0e-3}

@@ -1,0 +1,229 @@
+{
+  "A": {
+    "candidates": [
+      {
+        "tau_max": 50.0,
+        "n_tau": 1024,
+        "cases": [
+          {
+            "shape": "gaussian",
+            "s": 1,
+            "N": 4.0,
+            "edge_time_max": 5.9037091957805514e-08,
+            "edge_freq_max": 1.0135685308431417e-19,
+            "dtau_halving_change": 1.6665615122471172e-12,
+            "pass": true
+          }
+        ],
+        "pass": true
+      }
+    ],
+    "dxi": [
+      {
+        "dxi": 0.0002,
+        "cases": [
+          {
+            "shape": "gaussian",
+            "N": 4.0,
+            "dxi_halving_change": 7.691563416190507e-08,
+            "H_drift": 5.943464127490615e-08,
+            "E_drift": 4.059043478339597e-12,
+            "wall_s": 0.7671947479248047,
+            "pass": true
+          }
+        ],
+        "pass": true
+      }
+    ],
+    "chosen": {
+      "tau_max": 50.0,
+      "n_tau": 1024,
+      "dxi": 0.0002,
+      "xi_max": 4.0,
+      "n_save": 201
+    }
+  },
+  "B": {
+    "candidates": [
+      {
+        "tau_max": 30.0,
+        "n_tau": 1024,
+        "cases": [
+          {
+            "shape": "sech",
+            "s": -1,
+            "N": 3.0,
+            "edge_time_max": 1.2892517979985187e-11,
+            "edge_freq_max": 1.2188382692378958e-08,
+            "dtau_halving_change": 8.433164470170031e-05,
+            "pass": false
+          },
+          {
+            "shape": "gaussian",
+            "s": -1,
+            "N": 3.0,
+            "edge_time_max": 3.2734918360108524e-09,
+            "edge_freq_max": 5.133533950400476e-08,
+            "dtau_halving_change": 9.495387211533805e-05,
+            "pass": false
+          }
+        ],
+        "pass": false
+      },
+      {
+        "tau_max": 30.0,
+        "n_tau": 2048,
+        "cases": [
+          {
+            "shape": "sech",
+            "s": -1,
+            "N": 3.0,
+            "edge_time_max": 8.842464063706823e-14,
+            "edge_freq_max": 3.571659500734901e-17,
+            "dtau_halving_change": 1.1028966869326532e-10,
+            "pass": true
+          },
+          {
+            "shape": "gaussian",
+            "s": -1,
+            "N": 3.0,
+            "edge_time_max": 3.1734239952047054e-09,
+            "edge_freq_max": 5.087353056747321e-16,
+            "dtau_halving_change": 1.3626492419345395e-10,
+            "pass": true
+          }
+        ],
+        "pass": true
+      }
+    ],
+    "dxi": [
+      {
+        "dxi": 0.0002,
+        "cases": [
+          {
+            "shape": "sech",
+            "N": 3.0,
+            "dxi_halving_change": 0.0001303261679894315,
+            "H_drift": 2.6115638660715577e-05,
+            "E_drift": 3.2585045772748344e-12,
+            "wall_s": 1.8413245677947998,
+            "pass": false
+          },
+          {
+            "shape": "gaussian",
+            "N": 3.0,
+            "dxi_halving_change": 0.00011686094057792496,
+            "H_drift": 4.320728274383382e-05,
+            "E_drift": 3.2967435627290773e-12,
+            "wall_s": 1.9092257022857666,
+            "pass": false
+          }
+        ],
+        "pass": false
+      },
+      {
+        "dxi": 0.0001,
+        "cases": [
+          {
+            "shape": "sech",
+            "N": 3.0,
+            "dxi_halving_change": 3.25854643037756e-05,
+            "H_drift": 6.529251091477892e-06,
+            "E_drift": 7.754907827006718e-12,
+            "wall_s": 2.817274332046509,
+            "pass": false
+          },
+          {
+            "shape": "gaussian",
+            "N": 3.0,
+            "dxi_halving_change": 2.9220547595035185e-05,
+            "H_drift": 1.0803419624974779e-05,
+            "E_drift": 7.529042716218936e-12,
+            "wall_s": 3.560593843460083,
+            "pass": false
+          }
+        ],
+        "pass": false
+      },
+      {
+        "dxi": 5e-05,
+        "cases": [
+          {
+            "shape": "sech",
+            "N": 3.0,
+            "dxi_halving_change": 8.146842678899073e-06,
+            "H_drift": 1.6323425455244026e-06,
+            "E_drift": 1.0804468431047098e-11,
+            "wall_s": 7.246031761169434,
+            "pass": false
+          },
+          {
+            "shape": "gaussian",
+            "N": 3.0,
+            "dxi_halving_change": 7.305729990428947e-06,
+            "H_drift": 2.7009723115132263e-06,
+            "E_drift": 1.1247337505904366e-11,
+            "wall_s": 7.2418212890625,
+            "pass": false
+          }
+        ],
+        "pass": false
+      },
+      {
+        "dxi": 2.5e-05,
+        "cases": [
+          {
+            "shape": "sech",
+            "N": 3.0,
+            "dxi_halving_change": 2.0370800659046853e-06,
+            "H_drift": 4.0810914506629525e-07,
+            "E_drift": 2.8174351740517523e-11,
+            "wall_s": 15.217116594314575,
+            "pass": false
+          },
+          {
+            "shape": "gaussian",
+            "N": 3.0,
+            "dxi_halving_change": 1.8268327496894108e-06,
+            "H_drift": 6.752950548920844e-07,
+            "E_drift": 2.7556546891867674e-11,
+            "wall_s": 15.272356510162354,
+            "pass": false
+          }
+        ],
+        "pass": false
+      },
+      {
+        "dxi": 1.25e-05,
+        "cases": [
+          {
+            "shape": "sech",
+            "N": 3.0,
+            "dxi_halving_change": 5.102029754991224e-07,
+            "H_drift": 1.0206618389678867e-07,
+            "E_drift": 4.853273338767394e-11,
+            "wall_s": 25.87002682685852,
+            "pass": true
+          },
+          {
+            "shape": "gaussian",
+            "N": 3.0,
+            "dxi_halving_change": 4.577462331286228e-07,
+            "H_drift": 1.6890522906955962e-07,
+            "E_drift": 4.8517727529479464e-11,
+            "wall_s": 26.94422745704651,
+            "pass": true
+          }
+        ],
+        "pass": true
+      }
+    ],
+    "chosen": {
+      "tau_max": 30.0,
+      "n_tau": 2048,
+      "dxi": 1.25e-05,
+      "xi_max": 4.0,
+      "n_save": 201
+    }
+  }
+}
