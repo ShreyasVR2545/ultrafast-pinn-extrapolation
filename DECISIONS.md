@@ -17,3 +17,4 @@ One line of reason per decision. Newest at the bottom.
 - **D-013 (Phase 0.5) PINN+ Fourier features are deterministic periodic harmonics by default**, as in the cited causal paper, not random. A random-feature option exists in config.
 - **D-014 (Phase 0.5) Shortlisted technique 3: N-curriculum** (Krishnapriyan et al. curriculum regularization). It is held as a failure-handling fallback only and is not part of the main comparison unless training fails.
 - **D-015 (Phase 1) Starter repo submodule pinned** at `a41e83879d5d1e992f93ba4188c454a2370b94ce` (xieyulai/fiber-nlse-pinn, MIT). Remote: https://github.com/ShreyasVR2545/ultrafast-pinn-extrapolation (private). No teammate invited (D-001).
+- **D-016 (Phase 2) Repo reproduction scope.** fig3 and fig7 use 3 seeds; fig8 uses seed 0 only (8-segment decomposition, ~75 min per run at the README's 4586 s). It is a side reproduction, so its GPU time goes to the core study. More fig8 seeds run only if the GPU is idle later.
