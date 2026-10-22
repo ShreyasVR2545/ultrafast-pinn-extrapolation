@@ -133,7 +133,11 @@ class PINNLoss:
             self._adapt_due = True
         if self.causal:
             self.stage_steps += 1
-            if self.eps_stage < len(self.eps_list) - 1 and (self.min_w > 0.99 or self.stage_steps >= self.stage_len):
+            # Advance epsilon ONLY when causality is resolved at the current one (min w > 0.99), as in
+            # Wang et al. A forced, timer-based advance (used in an earlier pilot) drove min w to ~1e-20
+            # with a 2k-step Adam phase and froze training (DECISIONS D-027).
+            force = self.cfg.get("plus", {}).get("causal_force_advance", False) and self.stage_steps >= self.stage_len
+            if self.eps_stage < len(self.eps_list) - 1 and (self.min_w > 0.99 or force):
                 self.eps_stage += 1
                 self.stage_steps = 0
 
