@@ -37,6 +37,9 @@ def focus_tau(tau, focus, tau_max, rng):
 
 def n_range(cfg: dict, regime: str) -> tuple[float, float]:
     """Collocation/normalization N-range. Ablations may restrict strict PINNs to a train subset."""
+    if cfg.get("collocation_n_fixed"):  # test-time fine-tuning at one N (Phase 9.3); physics only, no labels
+        lo, hi = cfg["collocation_n_fixed"]
+        return float(lo), float(hi)
     sub = cfg.get("n_train_subset")
     if sub and cfg.get("collocation", "strict") == "strict":
         assert all(any(abs(n - t) < 1e-9 for t in splits.train_n(regime)) for n in sub), sub
