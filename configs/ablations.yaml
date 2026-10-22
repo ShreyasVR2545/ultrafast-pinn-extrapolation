@@ -1,0 +1,167 @@
+# Phase 8 ablations (run by scripts/run_sweep.py --plan configs/ablations.yaml --sweep ablations)
+# rw_*: training-range width; pp_*: PINN+ components; col*: collocation points; wic*: IC weight; de*: data efficiency.
+# Skipped: float64 L-BFGS (12x slower on this GPU, D-006); noise robustness (time).
+jobs:
+- regime: A
+  exp: n_extrap
+  model: pinn_strict
+  seed: 0
+  tag: rw_narrow
+  set:
+  - n_train_subset=[1.4, 1.6]
+- regime: A
+  exp: n_extrap
+  model: dd_mlp
+  seed: 0
+  tag: rw_narrow
+  set:
+  - n_train_subset=[1.4, 1.6]
+- regime: A
+  exp: n_extrap
+  model: cfno
+  seed: 0
+  tag: rw_narrow
+  set:
+  - n_train_subset=[1.4, 1.6]
+- regime: A
+  exp: n_extrap
+  model: pinn_strict
+  seed: 0
+  tag: rw_mid
+  set:
+  - n_train_subset=[1.2, 1.4, 1.6, 1.8]
+- regime: A
+  exp: n_extrap
+  model: dd_mlp
+  seed: 0
+  tag: rw_mid
+  set:
+  - n_train_subset=[1.2, 1.4, 1.6, 1.8]
+- regime: A
+  exp: n_extrap
+  model: cfno
+  seed: 0
+  tag: rw_mid
+  set:
+  - n_train_subset=[1.2, 1.4, 1.6, 1.8]
+- regime: A
+  exp: n_extrap
+  model: pinn_strict
+  seed: 1
+  tag: rw_narrow
+  set:
+  - n_train_subset=[1.4, 1.6]
+- regime: A
+  exp: n_extrap
+  model: dd_mlp
+  seed: 1
+  tag: rw_narrow
+  set:
+  - n_train_subset=[1.4, 1.6]
+- regime: A
+  exp: n_extrap
+  model: cfno
+  seed: 1
+  tag: rw_narrow
+  set:
+  - n_train_subset=[1.4, 1.6]
+- regime: A
+  exp: n_extrap
+  model: pinn_strict
+  seed: 1
+  tag: rw_mid
+  set:
+  - n_train_subset=[1.2, 1.4, 1.6, 1.8]
+- regime: A
+  exp: n_extrap
+  model: dd_mlp
+  seed: 1
+  tag: rw_mid
+  set:
+  - n_train_subset=[1.2, 1.4, 1.6, 1.8]
+- regime: A
+  exp: n_extrap
+  model: cfno
+  seed: 1
+  tag: rw_mid
+  set:
+  - n_train_subset=[1.2, 1.4, 1.6, 1.8]
+- regime: A
+  exp: n_extrap
+  model: pinn_plus
+  seed: 0
+  tag: pp_noff
+  set:
+  - plus.fourier_features=false
+- regime: A
+  exp: n_extrap
+  model: pinn_plus
+  seed: 0
+  tag: pp_nocausal
+  set:
+  - plus.causal=false
+- regime: A
+  exp: n_extrap
+  model: pinn_plus
+  seed: 0
+  tag: pp_noadapt
+  set:
+  - plus.adaptive_weights=false
+- regime: A
+  exp: n_extrap
+  model: pinn_strict
+  seed: 0
+  tag: col10k
+  set:
+  - sampling.n_col=10000
+  - sampling.n_col_lbfgs=10000
+- regime: A
+  exp: n_extrap
+  model: pinn_strict
+  seed: 0
+  tag: col50k
+  set:
+  - sampling.n_col=50000
+  - sampling.n_col_lbfgs=50000
+- regime: A
+  exp: n_extrap
+  model: pinn_strict
+  seed: 0
+  tag: wic1
+  set:
+  - loss.w_ic=1.0
+- regime: A
+  exp: n_extrap
+  model: pinn_strict
+  seed: 0
+  tag: wic100
+  set:
+  - loss.w_ic=100.0
+- regime: A
+  exp: n_extrap
+  model: dd_mlp
+  seed: 0
+  tag: de2
+  set:
+  - n_train_subset=[1.0, 2.0]
+- regime: A
+  exp: n_extrap
+  model: cfno
+  seed: 0
+  tag: de2
+  set:
+  - n_train_subset=[1.0, 2.0]
+- regime: A
+  exp: n_extrap
+  model: dd_mlp
+  seed: 0
+  tag: de4
+  set:
+  - n_train_subset=[1.0, 1.4, 1.6, 2.0]
+- regime: A
+  exp: n_extrap
+  model: cfno
+  seed: 0
+  tag: de4
+  set:
+  - n_train_subset=[1.0, 1.4, 1.6, 2.0]

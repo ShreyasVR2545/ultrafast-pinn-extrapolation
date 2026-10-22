@@ -22,7 +22,7 @@ def _ri(U):  # complex (..., n) -> real (..., 2, n)
 
 def build_model(cfg, regime, exp, device):
     a = cfg["arch"]
-    tr = splits.train_n(regime)
+    tr = cfg.get("n_train_subset") or splits.train_n(regime)  # ablations: normalize to the subset's range
     xi_lo, xi_hi = splits.xi_train_range(exp)
     if cfg["variant"] == "direct":
         return CondFNO(a["n_modes"], a["hidden"], a["n_layers"], 4, 2, [min(tr), xi_lo], [max(tr), xi_hi]).to(device)

@@ -35,10 +35,19 @@ def focus_tau(tau, focus, tau_max, rng):
     return tau
 
 
+def n_range(cfg: dict, regime: str) -> tuple[float, float]:
+    """Collocation/normalization N-range. Ablations may restrict strict PINNs to a train subset."""
+    sub = cfg.get("n_train_subset")
+    if sub and cfg.get("collocation", "strict") == "strict":
+        assert all(any(abs(n - t) < 1e-9 for t in splits.train_n(regime)) for n in sub), sub
+        return float(min(sub)), float(max(sub))
+    return splits.collocation_n_range(regime, cfg.get("collocation", "strict"))
+
+
 def build_model(cfg: dict, regime: str, exp: str, device) -> torch.nn.Module:
     g = splits.load_grid(regime)
     xi_lo, xi_hi = splits.xi_train_range(exp)
-    n_lo, n_hi = splits.collocation_n_range(regime, cfg.get("collocation", "strict"))
+    n_lo, n_hi = n_range(cfg, regime)
     lb, ub = [xi_lo, -g["tau_max"], n_lo], [xi_hi, g["tau_max"], n_hi]
     a = cfg["arch"]
     ff = cfg.get("plus", {}).get("fourier_features", False)
@@ -57,7 +66,7 @@ class PINNLoss:
         g = splits.load_grid(regime)
         self.s = self.rc["s"]
         self.xi_lo, self.xi_hi = splits.xi_train_range(exp)
-        self.n_lo, self.n_hi = splits.collocation_n_range(regime, cfg.get("collocation", "strict"))
+        self.n_lo, self.n_hi = n_range(cfg, regime)
         self.tau_max = g["tau_max"]
         self.rng = np.random.default_rng(seed)
         self.w_ic = float(cfg["loss"]["w_ic"])

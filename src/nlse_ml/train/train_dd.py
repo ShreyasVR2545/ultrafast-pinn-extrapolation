@@ -20,7 +20,7 @@ from .train_pinn import focus_tau
 def build_model(cfg, regime, exp, device):
     g = splits.load_grid(regime)
     xi_lo, xi_hi = splits.xi_train_range(exp)
-    tr = splits.train_n(regime)
+    tr = cfg.get("n_train_subset") or splits.train_n(regime)  # ablations: normalize to the subset's range
     a = cfg["arch"]
     return MLP(3, 2, a["width"], a["depth"], a["act"], [xi_lo, -g["tau_max"], min(tr)],
                [xi_hi, g["tau_max"], max(tr)]).to(device)
