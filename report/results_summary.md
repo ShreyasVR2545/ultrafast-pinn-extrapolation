@@ -24,7 +24,7 @@ predict where each model fails using physically meaningful quantities?
   All get an equal 22k optimizer steps. Hyperparameters were tuned on the Regime A interp split only. 3 seeds.
 * Scope reductions (D-028): B_gauss z-extrapolation was not run.
 
-Main sweep: 39 completed runs, 0 diverged, 0 crashed jobs (see `runs/main/sweep_log.jsonl`).
+Main sweep: 84 completed runs, 0 diverged, 0 crashed jobs (see `runs/main/sweep_log.jsonl`).
 
 ## Key findings (all numbers computed from results/)
 
@@ -33,16 +33,24 @@ Main sweep: 39 completed runs, 0 diverged, 0 crashed jobs (see `runs/main/sweep_
 3. **A, far extrapolation, complex field:** PINN-extended 103.1%, PINN+ 107.5%, PINN-strict 134.4%, cFNO 143.0%, DD-MLP 145.6%, cFNO-AR 858.8%. **Intensity only:** PINN-extended 28.8%, PINN+ 41.8%, PINN-strict 80.0%, cFNO 105.4%, DD-MLP 201.8%, cFNO-AR 30002.7%.
 4. *A: the ranking inverts.* The best in-distribution model (cFNO) is not the best at far-N intensity (PINN-extended); robust across seeds (non-overlapping mean ± std).
 5. **A, far-N max energy drift |ΔE|/E** (label-free plausibility): PINN-extended 0.47, PINN+ 0.71, PINN-strict 0.88, DD-MLP 1.27, cFNO 12.88, cFNO-AR 4051.76.
-6. **B_sech, in distribution (interp N), complex-field rel-L2:** cFNO-AR 1.7%, cFNO 1.8%, DD-MLP 3.4%, PINN+ 17.4%, PINN-strict 19.5%, PINN-extended 24.6% (mean over 1 seeds). See `fig_extrap_N_B_sech`.
-7. **B_sech, extrap extrapolation, complex field:** PINN-extended 98.3%, PINN+ 117.1%, cFNO-AR 144.5%, PINN-strict 175.9%, cFNO 197.1%, DD-MLP 347.3%. **Intensity only:** PINN+ 70.8%, PINN-extended 78.3%, cFNO-AR 98.2%, cFNO 99.0%, PINN-strict 131.6%, DD-MLP 649.4%.
-8. *B_sech: the ranking inverts.* The best in-distribution model (cFNO-AR) is not the best at extrap-N intensity (PINN+); robustness not assessed: fewer than 3 seeds.
-9. **B_sech, extrap-N max energy drift |ΔE|/E** (label-free plausibility): PINN-extended 0.45, PINN+ 0.54, cFNO-AR 1.85, PINN-strict 2.03, DD-MLP 4.42, cFNO 11.01.
-10. **A, z-extrapolation (ξ ∈ (2, 4], interp N):** DD-MLP 15.3%, PINN-strict 23.8%, cFNO-AR 48.3%, PINN+ 48.7%, cFNO 70.4%. Spectral error: PINN-strict 14.2%, DD-MLP 21.0%, PINN+ 28.2%, cFNO-AR 30.5%, cFNO 59.7%. See `fig_extrap_z`.
-11. **Cost (median per run):** training cFNO 3.4 min, cFNO-AR 3.5 min, DD-MLP 5.8 min, PINN-extended 15.2 min, PINN-strict 15.3 min, PINN+ 15.9 min; inference PINN-strict 23 ms, cFNO 23 ms, PINN-extended 23 ms, DD-MLP 24 ms, PINN+ 26 ms, cFNO-AR 104 ms per field.
-12. **SSFM at matched accuracy** (single-threaded NumPy, `results/ssfm_cost.csv`): A: matching the best model's interp error (0.88%) costs ≤ 9 ms per field (worst N in the ladder), and finer SSFM settings reach 8e-08 for every N; B_sech: matching the best model's interp error (1.72%) costs ≤ 229 ms per field (worst N in the ladder), and finer SSFM settings reach 4e-05 for every N. Fastest model inference: 23 ms per field. See `fig_pareto`.
-13. **Analysis A (n_extrap), error vs wf_train:** Spearman ρ cFNO 0.66 [0.44, 0.82], cFNO-AR 0.64 [0.43, 0.80], DD-MLP 0.64 [0.41, 0.80], PINN-extended 0.64 [0.43, 0.81], PINN+ 0.66 [0.43, 0.83], PINN-strict 0.68 [0.45, 0.84]. See `fig_error_vs_spectral_shift`.
-14. **Analysis A (n_extrap), error vs phi_eff:** Spearman ρ cFNO 0.82 [0.78, 0.85], cFNO-AR 0.82 [0.75, 0.87], DD-MLP 0.80 [0.74, 0.84], PINN-extended 0.95 [0.93, 0.97], PINN+ 0.93 [0.92, 0.94], PINN-strict 0.94 [0.92, 0.96]. See `fig_error_vs_spectral_shift`.
-15. **Analysis B (n_extrap), within-N across models:** energy_drift_max ρ=0.59 [0.46, 0.69], hamiltonian_drift_max ρ=0.67 [0.57, 0.76], grid_residual ρ=-0.47 [-0.67, -0.22]. A positive ρ means a lower label-free quantity picks the more accurate prediction at a fixed N. See `fig_drift_vs_error`.
+6. **B_sech, in distribution (interp N), complex-field rel-L2:** cFNO 2.2%, cFNO-AR 2.2%, DD-MLP 4.0%, PINN+ 19.2%, PINN-strict 19.7%, PINN-extended 28.6% (mean over 3 seeds). See `fig_extrap_N_B_sech`.
+7. **B_sech, extrap extrapolation, complex field:** PINN-extended 98.3%, PINN+ 119.4%, cFNO-AR 126.8%, PINN-strict 159.4%, cFNO 208.4%, DD-MLP 303.3%. **Intensity only:** cFNO-AR 66.2%, PINN+ 70.0%, PINN-extended 78.6%, PINN-strict 104.4%, cFNO 115.9%, DD-MLP 521.4%.
+8. *B_sech: the ranking inverts.* The best in-distribution model (cFNO) is not the best at extrap-N intensity (cFNO-AR); robust across seeds (non-overlapping mean ± std).
+9. **B_sech, extrap-N max energy drift |ΔE|/E** (label-free plausibility): PINN-extended 0.49, PINN+ 0.53, cFNO-AR 0.94, PINN-strict 1.60, DD-MLP 9.03, cFNO 9.90.
+10. **B_gauss, in distribution (interp N), complex-field rel-L2:** cFNO-AR 2.6%, cFNO 2.9%, DD-MLP 3.3%, PINN+ 19.1%, PINN-strict 22.1%, PINN-extended 26.4% (mean over 3 seeds). See `fig_extrap_N_B_gauss`.
+11. **B_gauss, extrap extrapolation, complex field:** PINN-extended 108.0%, PINN+ 117.1%, PINN-strict 145.7%, cFNO-AR 162.8%, cFNO 174.7%, DD-MLP 314.2%. **Intensity only:** PINN+ 67.2%, PINN-extended 77.1%, cFNO 78.4%, PINN-strict 89.3%, cFNO-AR 103.9%, DD-MLP 488.0%.
+12. *B_gauss: the ranking inverts.* The best in-distribution model (cFNO-AR) is not the best at extrap-N intensity (PINN+); NOT robust across seeds (mean ± std intervals overlap).
+13. **B_gauss, extrap-N max energy drift |ΔE|/E** (label-free plausibility): PINN-extended 0.45, PINN+ 0.47, PINN-strict 1.00, cFNO-AR 2.09, DD-MLP 7.93, cFNO 10.35.
+14. **A, z-extrapolation (ξ ∈ (2, 4], interp N):** DD-MLP 15.3%, PINN-strict 23.8%, cFNO-AR 48.3%, PINN+ 48.7%, cFNO 70.4%. Spectral error: PINN-strict 14.2%, DD-MLP 21.0%, PINN+ 28.2%, cFNO-AR 30.5%, cFNO 59.7%. See `fig_extrap_z`.
+15. **B_sech, z-extrapolation (ξ ∈ (2, 4], interp N):** cFNO-AR 12.3%, PINN+ 26.2%, cFNO 29.3%, PINN-strict 50.3%, DD-MLP 72.1%. Spectral error: cFNO-AR 8.7%, PINN-strict 13.0%, DD-MLP 18.7%, cFNO 27.6%, PINN+ 28.8%. See `fig_extrap_z`.
+16. **Cost (median per run):** training DD-MLP 6.1 min, cFNO 7.0 min, cFNO-AR 7.1 min, PINN-strict 15.4 min, PINN-extended 15.8 min, PINN+ 16.1 min; inference PINN-strict 44 ms, DD-MLP 46 ms, PINN-extended 47 ms, PINN+ 51 ms, cFNO 56 ms, cFNO-AR 108 ms per field.
+17. **SSFM at matched accuracy** (single-threaded NumPy, `results/ssfm_cost.csv`): A: matching the best model's interp error (0.88%) costs ≤ 9 ms per field (worst N in the ladder), and finer SSFM settings reach 8e-08 for every N; B_sech: matching the best model's interp error (2.17%) costs ≤ 229 ms per field (worst N in the ladder), and finer SSFM settings reach 4e-05 for every N; B_gauss: matching the best model's interp error (2.61%) costs ≤ 70 ms per field (worst N in the ladder), and finer SSFM settings reach 4e-05 for every N. Fastest model inference: 44 ms per field. See `fig_pareto`.
+18. **Analysis A (n_extrap), error vs wf_train:** Spearman ρ cFNO 0.64 [0.50, 0.74], cFNO-AR 0.57 [0.41, 0.70], DD-MLP 0.60 [0.45, 0.71], PINN-extended 0.44 [0.26, 0.61], PINN+ 0.48 [0.26, 0.65], PINN-strict 0.51 [0.30, 0.67]. See `fig_error_vs_spectral_shift`.
+19. **Analysis A (n_extrap), error vs phi_eff:** Spearman ρ cFNO 0.72 [0.63, 0.78], cFNO-AR 0.76 [0.70, 0.82], DD-MLP 0.77 [0.73, 0.80], PINN-extended 0.84 [0.79, 0.88], PINN+ 0.84 [0.80, 0.87], PINN-strict 0.87 [0.83, 0.90]. See `fig_error_vs_spectral_shift`.
+20. **Analysis A (z_extrap), error vs wf_train:** Spearman ρ cFNO 0.61 [0.52, 0.69], cFNO-AR 0.68 [0.60, 0.75], DD-MLP 0.48 [0.38, 0.59], PINN+ 0.55 [0.45, 0.66], PINN-strict 0.51 [0.42, 0.63]. See `fig_error_vs_spectral_shift`.
+21. **Analysis A (z_extrap), error vs phi_eff:** Spearman ρ cFNO 0.69 [0.64, 0.74], cFNO-AR 0.68 [0.62, 0.76], DD-MLP 0.17 [0.11, 0.26], PINN+ 0.70 [0.65, 0.74], PINN-strict 0.40 [0.34, 0.48]. See `fig_error_vs_spectral_shift`.
+22. **Analysis B (n_extrap), within-N across models:** energy_drift_max ρ=0.63 [0.56, 0.69], hamiltonian_drift_max ρ=0.55 [0.45, 0.63], grid_residual ρ=-0.30 [-0.44, -0.14]. A positive ρ means a lower label-free quantity picks the more accurate prediction at a fixed N. See `fig_drift_vs_error`.
+23. **Analysis B (z_extrap), within-N across models:** energy_drift_max ρ=0.74 [0.67, 0.80], hamiltonian_drift_max ρ=0.68 [0.58, 0.78], grid_residual ρ=0.69 [0.55, 0.82]. A positive ρ means a lower label-free quantity picks the more accurate prediction at a fixed N. See `fig_drift_vs_error`.
 
 ## Tables (generated by scripts/make_tables.py)
 
@@ -96,24 +104,70 @@ Main sweep: 39 completed runs, 0 diverged, 0 crashed jobs (see `runs/main/sweep_
 
 | Model | train (%) | interp (%) | extrap (%) | seeds |
 |---|---|---|---|---|
-| PINN-strict | 27.04 (med 27.04) | 19.52 (med 19.52) | 175.94 (med 175.94) | 1 |
-| PINN-extended | 30.03 (med 30.03) | 24.57 (med 24.57) | 98.29 (med 98.29) | 1 |
-| PINN+ | 25.87 (med 25.87) | 17.41 (med 17.41) | 117.09 (med 117.09) | 1 |
-| DD-MLP | 0.70 (med 0.70) | 3.35 (med 3.35) | 347.31 (med 347.31) | 1 |
-| cFNO | 1.00 (med 1.00) | 1.77 (med 1.77) | 197.09 (med 197.09) | 1 |
-| cFNO-AR | 1.33 (med 1.33) | 1.72 (med 1.72) | 144.51 (med 144.51) | 1 |
+| PINN-strict | 27.31 ± 0.62 (med 27.04) | 19.69 ± 0.70 (med 19.52) | 159.41 ± 18.93 (med 163.53) | 3 |
+| PINN-extended | 34.52 ± 4.35 (med 34.82) | 28.55 ± 3.94 (med 28.64) | 98.25 ± 0.10 (med 98.29) | 3 |
+| PINN+ | 27.30 ± 1.34 (med 27.51) | 19.18 ± 1.72 (med 19.26) | 119.44 ± 2.41 (med 119.32) | 3 |
+| DD-MLP | 0.69 ± 0.02 (med 0.70) | 4.00 ± 0.69 (med 3.92) | 303.32 ± 43.71 (med 302.74) | 3 |
+| cFNO | 0.91 ± 0.26 (med 1.00) | 2.17 ± 0.45 (med 2.07) | 208.36 ± 9.88 (med 212.43) | 3 |
+| cFNO-AR | 1.89 ± 0.51 (med 2.00) | 2.17 ± 0.43 (med 2.20) | 126.81 ± 17.51 (med 126.42) | 3 |
 
 
 #### B_sech / n_extrap: intensity rel-L2 (%)
 
 | Model | train (%) | interp (%) | extrap (%) | seeds |
 |---|---|---|---|---|
-| PINN-strict | 11.40 (med 11.40) | 7.41 (med 7.41) | 131.59 (med 131.59) | 1 |
-| PINN-extended | 17.05 (med 17.05) | 12.23 (med 12.23) | 78.34 (med 78.34) | 1 |
-| PINN+ | 10.23 (med 10.23) | 6.51 (med 6.51) | 70.80 (med 70.80) | 1 |
-| DD-MLP | 0.33 (med 0.33) | 4.04 (med 4.04) | 649.45 (med 649.45) | 1 |
-| cFNO | 0.83 (med 0.83) | 1.52 (med 1.52) | 99.03 (med 99.03) | 1 |
-| cFNO-AR | 0.99 (med 0.99) | 1.37 (med 1.37) | 98.21 (med 98.21) | 1 |
+| PINN-strict | 11.57 ± 0.33 (med 11.40) | 7.50 ± 0.17 (med 7.41) | 104.40 ± 25.96 (med 101.74) | 3 |
+| PINN-extended | 19.94 ± 2.89 (med 19.94) | 14.39 ± 2.16 (med 14.38) | 78.61 ± 0.28 (med 78.58) | 3 |
+| PINN+ | 10.88 ± 0.58 (med 11.05) | 7.05 ± 0.47 (med 7.29) | 69.99 ± 1.64 (med 70.80) | 3 |
+| DD-MLP | 0.32 ± 0.00 (med 0.32) | 4.73 ± 0.86 (med 4.46) | 521.42 ± 113.40 (med 481.24) | 3 |
+| cFNO | 0.68 ± 0.13 (med 0.62) | 1.40 ± 0.13 (med 1.43) | 115.92 ± 20.23 (med 110.39) | 3 |
+| cFNO-AR | 1.01 ± 0.06 (med 0.99) | 1.26 ± 0.21 (med 1.37) | 66.20 ± 27.75 (med 51.41) | 3 |
+
+
+#### B_sech / z_extrap: complex-field rel-L2 (%)
+
+| Model | train (%) | interp (%) | seeds |
+|---|---|---|---|
+| PINN-strict | 62.39 ± 13.57 (med 54.73) | 50.33 ± 12.92 (med 43.76) | 3 |
+| PINN+ | 37.02 ± 3.79 (med 35.16) | 26.18 ± 2.93 (med 24.98) | 3 |
+| DD-MLP | 86.64 ± 6.48 (med 88.24) | 72.07 ± 5.43 (med 73.09) | 3 |
+| cFNO | 37.95 ± 3.09 (med 39.08) | 29.25 ± 2.10 (med 29.78) | 3 |
+| cFNO-AR | 11.21 ± 0.12 (med 11.21) | 12.29 ± 0.49 (med 12.56) | 3 |
+
+
+#### B_sech / z_extrap: intensity rel-L2 (%)
+
+| Model | train (%) | interp (%) | seeds |
+|---|---|---|---|
+| PINN-strict | 73.51 ± 30.49 (med 57.26) | 71.21 ± 31.65 (med 55.06) | 3 |
+| PINN+ | 15.97 ± 1.08 (med 16.42) | 11.61 ± 1.65 (med 12.54) | 3 |
+| DD-MLP | 79.04 ± 19.67 (med 68.34) | 69.33 ± 18.90 (med 58.84) | 3 |
+| cFNO | 15.00 ± 2.13 (med 15.21) | 11.71 ± 1.99 (med 11.46) | 3 |
+| cFNO-AR | 10.75 ± 1.83 (med 10.06) | 13.67 ± 2.07 (med 13.59) | 3 |
+
+
+#### B_gauss / n_extrap: complex-field rel-L2 (%)
+
+| Model | train (%) | interp (%) | extrap (%) | seeds |
+|---|---|---|---|---|
+| PINN-strict | 29.71 ± 0.99 (med 29.51) | 22.05 ± 0.90 (med 22.04) | 145.66 ± 3.59 (med 147.21) | 3 |
+| PINN-extended | 32.23 ± 2.13 (med 32.52) | 26.43 ± 2.22 (med 26.57) | 108.05 ± 1.17 (med 107.85) | 3 |
+| PINN+ | 27.78 ± 1.42 (med 27.04) | 19.13 ± 1.66 (med 18.18) | 117.12 ± 2.29 (med 115.94) | 3 |
+| DD-MLP | 0.99 ± 0.03 (med 1.00) | 3.27 ± 0.36 (med 3.28) | 314.17 ± 11.06 (med 320.03) | 3 |
+| cFNO | 0.64 ± 0.07 (med 0.67) | 2.91 ± 0.49 (med 3.15) | 174.75 ± 30.02 (med 175.81) | 3 |
+| cFNO-AR | 1.66 ± 0.43 (med 1.75) | 2.61 ± 0.24 (med 2.69) | 162.82 ± 19.57 (med 173.62) | 3 |
+
+
+#### B_gauss / n_extrap: intensity rel-L2 (%)
+
+| Model | train (%) | interp (%) | extrap (%) | seeds |
+|---|---|---|---|---|
+| PINN-strict | 10.74 ± 0.35 (med 10.60) | 7.78 ± 0.29 (med 7.75) | 89.30 ± 10.74 (med 95.30) | 3 |
+| PINN-extended | 16.63 ± 0.84 (med 16.97) | 13.13 ± 0.61 (med 13.46) | 77.06 ± 0.68 (med 77.41) | 3 |
+| PINN+ | 9.27 ± 0.35 (med 9.32) | 6.48 ± 0.41 (med 6.31) | 67.21 ± 2.01 (med 67.88) | 3 |
+| DD-MLP | 0.29 ± 0.02 (med 0.30) | 3.47 ± 0.54 (med 3.75) | 487.96 ± 70.00 (med 472.74) | 3 |
+| cFNO | 0.63 ± 0.24 (med 0.68) | 1.77 ± 0.53 (med 1.85) | 78.41 ± 17.65 (med 74.32) | 3 |
+| cFNO-AR | 0.92 ± 0.17 (med 1.00) | 2.63 ± 0.22 (med 2.55) | 103.92 ± 41.62 (med 123.21) | 3 |
 
 
 #### Cost
@@ -121,12 +175,12 @@ Main sweep: 39 completed runs, 0 diverged, 0 crashed jobs (see `runs/main/sweep_
 
 | Model | median train (min) | peak GPU mem (GB) | optimizer steps | params | inference (ms/field) | runs | failed |
 |---|---|---|---|---|---|---|---|
-| PINN-strict | 15.3 | 0.43 | 22000 | 30902 | 22.6 | 7 | 0 |
-| PINN-extended | 15.2 | 0.43 | 22000 | 30902 | 23.1 | 4 | 0 |
-| PINN+ | 15.9 | 0.49 | 22000 | 40402 | 25.7 | 7 | 0 |
-| DD-MLP | 5.8 | 0.10 | 22000 | 30902 | 24.0 | 7 | 0 |
-| cFNO | 3.4 | 0.35 | 22000 | 1116226 | 22.8 | 7 | 0 |
-| cFNO-AR | 3.5 | 0.35 | 22000 | 1117130 | 104.3 | 7 | 0 |
+| PINN-strict | 15.4 | 0.43 | 22000 | 30902 | 43.9 | 15 | 0 |
+| PINN-extended | 15.8 | 0.43 | 22000 | 30902 | 47.4 | 9 | 0 |
+| PINN+ | 16.1 | 0.49 | 22000 | 40402 | 51.1 | 15 | 0 |
+| DD-MLP | 6.1 | 0.10 | 22000 | 30902 | 46.0 | 15 | 0 |
+| cFNO | 7.0 | 0.64 | 22000 | 1116226 | 56.1 | 15 | 0 |
+| cFNO-AR | 7.1 | 0.65 | 22000 | 1117130 | 108.0 | 15 | 0 |
 
 
 ## Figures
