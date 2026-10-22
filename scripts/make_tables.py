@@ -89,6 +89,7 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--sweep", default="main")
     ap.add_argument("--aggregate", action="store_true", help="re-scan runs/ first")
+    ap.add_argument("--tag", default="", help="only runs with this tag (e.g. pilot tags)")
     a = ap.parse_args()
     if a.aggregate:
         aggregate.write(a.sweep)
@@ -103,15 +104,17 @@ def main():
     for regime in ["A", "B_sech", "B_gauss"]:
         for exp in ["n_extrap", "z_extrap"]:
             for metric, pct in [("rel_l2", True), ("spectral_err", True), ("energy_drift_max", False)]:
-                md, tex = table(long, regime, exp, metric, pct)
+                md, tex = table(long, regime, exp, metric, pct, a.tag)
                 if md is None:
                     continue
-                name = f"{a.sweep}_{regime}_{exp}_{metric}"
+                name = f"{a.sweep}{'_' + a.tag if a.tag else ''}_{regime}_{exp}_{metric}"
                 (out / f"{name}.md").write_text(md + "\n", encoding="utf-8")
                 (out / f"{name}.tex").write_text(tex + "\n", encoding="utf-8")
                 doc += [f"## {regime} / {exp} / {metric}", "", md, ""]
+    runs = runs[runs.tag.fillna("") == a.tag]
     doc += ["## Cost", "", cost_table(runs), ""]
-    (out / f"{a.sweep}_all.md").write_text("\n".join(doc), encoding="utf-8")
+    name = f"{a.sweep}_{a.tag}_all.md" if a.tag else f"{a.sweep}_all.md"
+    (out / name).write_text("\n".join(doc), encoding="utf-8")
     print("\n".join(doc))
 
 
