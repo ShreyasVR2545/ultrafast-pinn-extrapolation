@@ -22,3 +22,6 @@ report/papers/
 .idea/
 .DS_Store
 Thumbs.db
+
+# private explainer for the two of us (not published)
+report/PROJECT_EXPLAINER.md

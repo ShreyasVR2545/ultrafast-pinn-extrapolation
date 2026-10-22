@@ -79,3 +79,19 @@
 **Problems / surprises:** the PINN in-distribution fit is markedly worse in Regime B (hyperparameters were tuned on Regime A interp only). cFNO-AR rollouts diverge on some seeds at far N (A: huge intensity errors).
 **Commits:** results + figures per block. Merged to main, tag `m3-main-results`, pushed: y.
 **Next:** Phase 8 ablations (running, 23 jobs, ~4.3 h), then fine-tuning (Phase 9.3), then Phase 10.
+
+## Checkpoint 8: Ablations (2026-10-23, finished 01:57)
+**Status:** done. 23/23 runs ok, 4.6 h. Regime A, n_extrap. Results in `results/ablations_*.csv`, figures `fig_ablation_range_width` and `fig_ablation_components`, findings 24-27 in `report/results_summary.md`.
+- Training-range width (seeds 0-1): PINN-strict's error vs distance-to-range is nearly independent of the range width; the data-driven models trained narrow degrade faster.
+- PINN+: the Fourier features are essential (removing them takes interp from 6.2% to 115%). Causal weighting helps slightly; adaptive weights are neutral.
+- Collocation 10k/20k/50k: no clear effect. **IC weight: w_ic=1 roughly halves PINN-strict's in-distribution error** (4.9% vs 8.3%, single seed). w_ic was never tuned, so this is logged as a limitation and does not change the ranking.
+- Data efficiency: with 2 training N values the data-driven models fail (DD-MLP 82% interp); with 4 they match 6.
+- Skipped: the float64 L-BFGS ablation (12× slower on this GPU, D-006) and noise robustness (time).
+
+## Checkpoint 9: Novel analyses (2026-10-23)
+**Status:** done (A, B, and the optional fine-tuning; inverse retrieval skipped for time).
+- A: the closed-form SPM phase N² asinh ξ predicts PINN error (ρ ≈ 0.84-0.87) better than data-driven error (0.72-0.77). The WF distance to the training spectra is weaker (0.44-0.64). Extension of Fesser et al., not novel (D-012).
+- B: within a fixed N, energy drift ranks predictions by accuracy (ρ = 0.63 N-extrap, 0.74 z-extrap). The grid PDE residual is anti-correlated across model families in N-extrap (ρ = −0.30).
+- Fine-tuning (seed 0, 6000 physics-only L-BFGS steps, ~10-13 min): no case reaches the model's own in-distribution error (A N=3: 134% → 60%; A N=4: 135% → 120%). SSFM reaches that accuracy in milliseconds. Honest conclusion: SSFM wins.
+- Optional inverse retrieval (9.4): not done (time).
+**Commits:** ablation and fine-tune results and figures. Merged, tag `m4-analysis`, pushed: y.
