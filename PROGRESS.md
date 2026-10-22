@@ -34,3 +34,33 @@
 **Key results:** remote https://github.com/ShreyasVR2545/ultrafast-pinn-extrapolation. Teammate invite skipped (no username given).
 **Commits:** `chore: scaffold repo structure, env check, benchmark scripts`; `docs(lit): literature notes, references and brief corrections`; `chore: add starter repo as pinned submodule`. Pushed: y.
 **Next:** Phase 2, audit the starter repo and reproduce fig3, fig7 and fig8.
+
+## Checkpoint 3: Independent ground truth (SSFM) and validation (2026-10-22)
+**Status:** done
+**What I did:** Symmetric SSFM + RK4IP (float64), analytic solutions, E/P/H. `tests/test_physics.py` has 14 tests. Grid study `scripts/03_validate_ssfm.py` produces `configs/grid.yaml`, `results/grid_study.json`, `figures/ssfm_validation.png` and 6 gallery figures (`figures/gallery_*.png`).
+**Key results:** All physics tests pass: GVD analytic error <1e-8, N=1 soliton over 4 periods <1e-6, N=2 recurrence <1e-6, Hamiltonian drift <1e-6, second-order convergence, RK4IP agreement <1e-6. The starter repo's SSFM agrees to <1e-4, limited by its dz=2e-3. Chosen grids are in D-017. Every criterion is <1e-6 on the hardest cases.
+**Sanity checks:** the N=2 soliton compresses at ξ≈π/4+kπ/2 (gallery_B_N2). Regime A N=4 shows the expected SPM broadening and saturation in normal dispersion.
+**Problems / surprises:** two tests needed corrected setups, not looser tolerances (D-018).
+**Commits:** physics tests, residual tests, grid study, figures. Merged to main, tag `m1-ground-truth`, pushed: y.
+
+## Checkpoint 4: Datasets and pre-registered splits (2026-10-22)
+**Status:** done
+- `configs/splits.yaml` was committed in 278e132, before any model training.
+- `scripts/04_generate_data.py` produced 37 fields (A: 15, B_sech: 11, B_gauss: 11), 146 MB, in 126 s wall with 6 workers. Zero grid-quality failures (edge energy, H drift <1e-6 for every field). Details in `results/data_summary.json`.
+- `tests/test_splits.py` covers disjoint splits, a training loader that refuses test N and mislabelled files, the ξ≤2 mask for z_extrap, and a check that train/ never imports the eval loader.
+
+## Checkpoint 5: Metrics and evaluation library (2026-10-22)
+**Status:** done
+- `eval/metrics.py`: field, intensity, phase and spectral errors, observables, and drift and grid-residual physics checks. `eval/spectral_shift.py`: WF distance and SPM predictor. `tests/test_metrics.py` has 10 tests (identical fields give 0, phase offset, shifted Gaussians give W = shift, analytic drift ≈ 0, observables vs closed form).
+- `eval/evaluate.py`, `eval/aggregate.py` (tidy CSVs), `scripts/make_tables.py` (md + LaTeX, mean ± std and median over seeds), `scripts/run_sweep.py` (resumable).
+
+## Checkpoint 6: Models and training, in-distribution first (2026-10-22)
+**Status:** done. The single-seed table comes from the final-config pilots, and the main sweep's seed 0 reproduces it with all 6 models.
+**What I did:** Implemented the shared MLP (with an exact Taylor-mode derivative path), PINN-strict/extended, PINN+ (periodic Fourier features, causal ξ weights, gradient-norm loss weights), DD-MLP, cFNO (direct, conditioned on (N, ξ)) and cFNO-AR, plus `run_experiment.py`, `run_sweep.py`, evaluation, aggregation, tables and figures. All models pass `--smoke` in under 15 s.
+**Key results** (Regime A, seed 0, final config; `report/tables/pilot_s4_all.md`, `results/pilot_*.csv`):
+- interp rel-L2: cFNO 0.95%, DD-MLP 2.0%, PINN+ 6.3%, PINN-strict 8.3% (cFNO-AR 1.9%).
+- near: DD 13%, cFNO 25%, PINN+ 36%, PINN-strict 46%. far: all models ≈ 100-140% (cFNO-AR 241%).
+- Cost per run: PINN-strict 15 min, PINN+ 24 min, DD-MLP 4.5 min, cFNO 6.4 min.
+**Sanity checks:** error grows with N for every model. The DD-MLP fits its training N at ~1-4%. Our PINN matches the starter repo on its own fig3 problem (3.5% vs 3.0%), which validates the implementation.
+**Problems / surprises:** the first PINN pilots failed (16-94% in-distribution). Three causes, all ours and all fixed: an L-BFGS-starved schedule, a forced causal-ε advance, and PINN+ overfitting a fixed L-BFGS collocation set (D-025 to D-029). The PINNs remain worse than the data-driven models *in distribution* at equal optimizer steps, and they cost 3-5× more wall-clock.
+**Next:** the Phase 7 main sweep was launched (blocks a→b→c→d, 3 seeds), estimated ~17 GPU-h (D-028 scope: B_gauss z_extrap dropped unless time remains).

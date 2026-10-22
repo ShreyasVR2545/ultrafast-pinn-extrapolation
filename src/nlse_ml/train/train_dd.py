@@ -14,6 +14,7 @@ from ..data import splits
 from ..data.datasets import load_training_fields
 from ..models.mlp import MLP
 from .common import Schedule, fit
+from .train_pinn import focus_tau
 
 
 def build_model(cfg, regime, exp, device):
@@ -43,9 +44,21 @@ def train(cfg, regime, exp, seed, device, log=print, data_dir=None):
     model = build_model(cfg, regime, exp, device)
     c = cfg["sampling"]
 
+    n_tau = fields[0].tau.size
+    tau_grid_np = fields[0].tau
+    focus = c.get("tau_focus")
+
     def sample(phase):
         n = c["n_col_lbfgs"] if phase == "lbfgs" else c["n_col"]
-        idx = torch.as_tensor(rng.choice(X.shape[0], n, replace=False), device=device)
+        if not focus:
+            idx = rng.choice(X.shape[0], n, replace=False)
+        else:  # same tau sampling density as the PINN collocation (uniform/normal mixture)
+            rows = rng.integers(0, X.shape[0] // n_tau, n)  # (field, xi) row
+            t = rng.uniform(-tau_grid_np.max(), tau_grid_np.max(), n)
+            t = focus_tau(t, focus, float(-tau_grid_np[0]), rng)
+            j = np.clip(np.searchsorted(tau_grid_np, t), 0, n_tau - 1)
+            idx = rows * n_tau + j
+        idx = torch.as_tensor(idx, device=device)
         return X[idx], Y[idx]
 
     def loss_fn(batch, phase):

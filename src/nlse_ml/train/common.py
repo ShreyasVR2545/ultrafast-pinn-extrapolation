@@ -23,6 +23,8 @@ class Schedule:
     resample_every: int = 100
     lbfgs_steps: int = 2000
     lbfgs_history: int = 50
+    lbfgs_resample_every: int = 0  # >0: fresh batch + fresh L-BFGS state every K iterations (prevents
+    #                                 overfitting a fixed collocation set; DECISIONS D-029)
     log_every: int = 100
 
 
@@ -79,9 +81,12 @@ def fit(model, loss_fn, sampler, sched: Schedule, log=print, on_step=None) -> Fi
 
     if res.status == "ok" and sched.lbfgs_steps > 0:
         t1 = time.perf_counter()
+        def new_lbfgs():
+            return torch.optim.LBFGS(model.parameters(), lr=1.0, max_iter=1, history_size=sched.lbfgs_history,
+                                     tolerance_grad=1e-12, tolerance_change=1e-15, line_search_fn="strong_wolfe")
+
         batch = sampler("lbfgs")
-        lb = torch.optim.LBFGS(model.parameters(), lr=1.0, max_iter=1, history_size=sched.lbfgs_history,
-                               tolerance_grad=1e-12, tolerance_change=1e-15, line_search_fn="strong_wolfe")
+        lb = new_lbfgs()
         last = {}
 
         def closure():
@@ -92,6 +97,9 @@ def fit(model, loss_fn, sampler, sched: Schedule, log=print, on_step=None) -> Fi
             return l
 
         for it in range(sched.lbfgs_steps):
+            if sched.lbfgs_resample_every and it > 0 and it % sched.lbfgs_resample_every == 0:
+                batch = sampler("lbfgs")
+                lb = new_lbfgs()
             lb.step(closure)
             res.steps_done += 1
             if not math.isfinite(last["loss"]):
