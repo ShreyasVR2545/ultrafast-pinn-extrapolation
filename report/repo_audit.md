@@ -44,5 +44,15 @@ The preset names are **off by two** from the arXiv figure numbering:
 7. `main.py` creates `outputs/` inside the repo at import time. Harmless.
 
 ## Reproduction (Phase 2)
-Wrapper: `scripts/02_reproduce_repo.py` (README flags unchanged, seeds {0, 1, 2}). The numbers are generated in `results/repro_repo.md` and `results/repro_repo.csv`, and summarized in PROGRESS.md Checkpoint 2.
+Wrapper: `scripts/02_reproduce_repo.py` (README flags unchanged, seeds {0, 1, 2}). Generated table (`results/repro_repo.md`):
+
+| Preset | Paper fig. | Seeds | rel L2 mean ± std | median | README (seed 42) | wall s/run |
+|---|---|---|---|---|---|---|
+| fig3 | 5 | 3 | 0.0297 ± 0.0012 | 0.0300 | 0.0261 | 1420 |
+| fig7 | 9 | 3 | 0.0272 ± 0.0103 | 0.0271 | 0.0288 | 673 |
+| fig8 | 10 | 1 | 0.0031 ± nan | 0.0031 | 0.0048 | 8257 |
+
+**Verdict:** the repo's README numbers reproduce within seed variation. fig3 and fig7 are within about 1 std of the
+seed-42 values. fig8 has 1 seed only and uses domain decomposition. Wall times on this laptop GPU were 2-4x longer
+than the README's.
 Scope reduction: fig8 runs with seed 0 only, because each fig8 run takes ~75 min of GPU (D-016).

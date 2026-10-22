@@ -95,3 +95,28 @@
 - Fine-tuning (seed 0, 6000 physics-only L-BFGS steps, ~10-13 min): no case reaches the model's own in-distribution error (A N=3: 134% → 60%; A N=4: 135% → 120%). SSFM reaches that accuracy in milliseconds. Honest conclusion: SSFM wins.
 - Optional inverse retrieval (9.4): not done (time).
 **Commits:** ablation and fine-tune results and figures. Merged, tag `m4-analysis`, pushed: y.
+
+## Checkpoint 2 (completed 2026-10-23): Starter-repo reproduction
+fig3 (paper Fig. 5): 2.97% ± 0.12% over 3 seeds, vs README 2.61%. fig7 (Fig. 9): 2.72% ± 1.03% over 3 seeds, vs 2.88%. fig8 (Fig. 10, 8-segment decomposition): 0.31% with 1 seed, vs 0.48%. These reproduce within seed variation (`results/repro_repo.md`, `report/repo_audit.md`). The runs were paused during the main study and resumed at the end (D-016).
+
+## FINAL CHECKPOINT (2026-10-23, ~05:30)
+**Status:** done. Total GPU time ≈ 30 h (pilots ~5 h, main 14.8 h, ablations 4.6 h, fine-tuning 0.75 h, repo reproduction ~5 h), within the user's 1-2 day window (D-003).
+**What was found** (numbers in `report/results_summary.md`):
+1. In distribution, data-driven models (cFNO, DD-MLP) are 3-10× more accurate than every PINN variant in all regimes. The paper's "PINN beats data-driven" result (a data-scarce, single-scenario setting) does not carry over to a data-rich parametric surrogate.
+2. Far extrapolation in N: every model fails on the complex field (phase lost). Physics-informed models stay physically plausible (lowest energy drift in all regimes, much better intensity and peak power than the DD-MLP).
+3. z-extrapolation: no model class wins in both regimes.
+4. SSFM at the models' accuracy costs milliseconds (Regime A) to ~0.2 s (hard Regime B cases), and is never less accurate. Physics-only fine-tuning at far N does not close the gap within ~10 min.
+5. Analysis A: the closed-form SPM phase predicts PINN error (ρ ≈ 0.85). Analysis B: energy drift is a usable label-free error flag; the PDE residual misleads across model families.
+**Confidence:** the headline rankings are robust across 3 seeds (labelled in the summary); the smaller gaps are labelled not robust.
+**What failed or is missing:**
+- early PINN pilots (fixed, D-025 to D-030);
+- B_gauss z-extrapolation not run (D-028);
+- optional inverse retrieval, float64 and noise ablations not run;
+- the IC weight was untuned (w_ic=1 roughly halves PINN error, single seed).
+**Fresh-clone check:** pytest 41 passed, 1 skipped (needs the submodule). Tables, figures and summary regenerate byte-identically from `results/`. Tag `final`.
+**Open issues for Q&A:**
+- the PINNs are under-trained relative to the data-driven models at the equal step budget;
+- hyperparameters were tuned on Regime A only;
+- the complex-field metric saturates once the phase is lost;
+- analysis A's WF distance needs ground truth;
+- single physical model (scalar NLSE).
