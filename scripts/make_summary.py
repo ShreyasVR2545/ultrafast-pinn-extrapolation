@@ -125,6 +125,38 @@ def findings(long, runs):
                 for row in w[w.exp == exp].itertuples())
                      + ". A positive ρ means a lower label-free quantity picks the more accurate prediction at a fixed N. "
                        "See `fig_drift_vs_error`.")
+    ab = RES / "ablations_long.csv"
+    if ab.exists():
+        a_ = pd.read_csv(ab)
+        a_["tag"] = a_["tag"].fillna("")
+        mn = long[(long.regime == "A") & (long.exp == "n_extrap") & (long.tag.fillna("") == "")].assign(tag="main")
+        d = pd.concat([a_, mn])
+        d = d[(d.metric == "rel_l2") & (d.seed == 0)]
+        t = d.groupby(["model", "tag", "split"])["value"].mean()
+
+        def g(m, tag, sp):
+            try:
+                return f"{t[(m, tag, sp)] * 100:.1f}%"
+            except KeyError:
+                return "n/a"
+
+        F.append("**Ablation, PINN+ components (A, seed 0, interp / near):** all on " + f"{g('pinn_plus', 'main', 'interp')} / {g('pinn_plus', 'main', 'near')}; "
+                 + "no Fourier features " + f"{g('pinn_plus', 'pp_noff', 'interp')} / {g('pinn_plus', 'pp_noff', 'near')}; "
+                 + "no causal " + f"{g('pinn_plus', 'pp_nocausal', 'interp')} / {g('pinn_plus', 'pp_nocausal', 'near')}; "
+                 + "no adaptive weights " + f"{g('pinn_plus', 'pp_noadapt', 'interp')} / {g('pinn_plus', 'pp_noadapt', 'near')}. "
+                 "See `fig_ablation_components`.")
+        F.append("**Ablation, PINN-strict collocation points (interp):** 10k " + g("pinn_strict", "col10k", "interp")
+                 + ", 20k " + g("pinn_strict", "main", "interp") + ", 50k " + g("pinn_strict", "col50k", "interp")
+                 + ". **IC weight (interp / near):** w_ic=1 " + f"{g('pinn_strict', 'wic1', 'interp')} / {g('pinn_strict', 'wic1', 'near')}"
+                 + ", w_ic=10 (used) " + f"{g('pinn_strict', 'main', 'interp')} / {g('pinn_strict', 'main', 'near')}"
+                 + ", w_ic=100 " + f"{g('pinn_strict', 'wic100', 'interp')} / {g('pinn_strict', 'wic100', 'near')}"
+                 + ". w_ic was not tuned before the main study, so the PINNs could be somewhat better (single seed).")
+        F.append("**Ablation, data efficiency (interp, 2 / 4 / 6 training N):** DD-MLP " + " / ".join(
+            g("dd_mlp", tg, "interp") for tg in ["de2", "de4", "main"]) + "; cFNO " + " / ".join(
+            g("cfno", tg, "interp") for tg in ["de2", "de4", "main"]) + ". The PINNs use no field data.")
+        F.append("**Ablation, training-range width:** see `fig_ablation_range_width` (error vs distance outside the training "
+                 "range, seeds 0-1). PINN-strict's curves for the three range widths nearly coincide, while the "
+                 "data-driven models trained on the narrow range degrade faster with distance.")
     f = RES / "finetune.csv"
     if f.exists():
         ft = pd.read_csv(f)
@@ -133,7 +165,7 @@ def findings(long, runs):
             hit = d[d.rel_l2 <= d.target_interp]
             msg = (f"reached its in-distribution error after {int(hit.step.iloc[0])} L-BFGS steps ({hit.wall_s.iloc[0]:.0f} s)"
                    if len(hit) else f"did not reach its in-distribution error ({d.target_interp.iloc[0] * 100:.1f}%) in "
-                                    f"{int(d.step.max())} steps; best {d.rel_l2.min() * 100:.1f}% after {d.wall_s.max():.0f} s")
+                                    f"{int(d.step.max())} steps; best {d.rel_l2.min() * 100:.1f}% within {d.wall_s.max():.0f} s of fine-tuning, final {d.rel_l2.iloc[-1] * 100:.1f}%")
             F.append(f"**Fine-tuning at {reg} N={N:g}:** starting at {d.rel_l2.iloc[0] * 100:.0f}% error, the PINN {msg}. "
                      f"See `fig_finetune`.")
     return F
@@ -205,7 +237,9 @@ STATIC_LIMITS = """## Limitations and threats to validity
   (D-025 to D-030). Their extrapolation comparison is therefore between unequally accurate in-distribution models. We
   report it as is and point to the fine-tuning and ablation results.
 * Hyperparameters were tuned only on the Regime A interpolation split and applied unchanged to Regime B, where the
-  PINN in-distribution fit is worse.
+  PINN in-distribution fit is worse. The IC loss weight (w_ic = 10) was not tuned before the main study; the ablation
+  shows w_ic = 1 roughly halves PINN-strict's in-distribution error (single seed). That would still leave it behind
+  the data-driven models, but the PINN numbers are not the best achievable.
 * Three seeds per configuration; the confidence intervals are wide for small differences. Conclusions labelled
   "not robust" should not be quoted as findings.
 * The complex-field rel-L2 saturates near ~1.4 once the phase is lost, so it under-reports differences in intensity
