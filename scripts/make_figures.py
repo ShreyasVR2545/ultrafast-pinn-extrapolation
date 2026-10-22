@@ -55,22 +55,27 @@ def _band(ax, x, mean, std, key):
 
 
 def fig_extrap_N(long, regime, sweep):
-    d = long[(long.metric == "rel_l2") & (long.regime == regime) & (long.exp == "n_extrap") & (long.tag == "")]
-    if d.empty:
+    base = long[(long.regime == regime) & (long.exp == "n_extrap") & (long.tag == "")]
+    if base.empty:
         return
-    fig, ax = plt.subplots(figsize=(6.4, 4))
+    fig, axes = plt.subplots(1, 2, figsize=(11, 4))
     tr = splits.train_n(regime)
-    ax.axvspan(min(tr), max(tr), color=style.GRID, alpha=0.7, lw=0)
-    ax.text(np.mean(tr), 0.98, "training range", transform=ax.get_xaxis_transform(), ha="center", va="top",
-            color=style.INK2, fontsize=8)
-    for m in _models(d):
-        g = d[d.model == m].groupby("N")["value"]
-        x = np.array(sorted(g.groups))
-        _band(ax, x, g.mean().loc[x].values, g.std(ddof=1).loc[x].values, m)
-    nseed = d.groupby("model").seed.nunique().min()
-    ax.set(yscale="log", xlabel="soliton order N", ylabel="relative L2 error (full field)",
-           title=f"{REG_TITLE[regime]}: N-extrapolation (mean ± std, {nseed}+ seeds)")
-    ax.legend(ncol=2, fontsize=7.5)
+    nseed = base.groupby("model").seed.nunique().min()
+    for ax, metric, ylab in [(axes[0], "rel_l2", "relative L2 error, complex field"),
+                             (axes[1], "rel_l2_intensity", r"relative L2 error, intensity $|U|^2$")]:
+        d = base[base.metric == metric]
+        ax.axvspan(min(tr), max(tr), color=style.GRID, alpha=0.7, lw=0)
+        ax.text(np.mean(tr), 0.98, "training range", transform=ax.get_xaxis_transform(), ha="center", va="top",
+                color=style.INK2, fontsize=8)
+        for m in _models(d):
+            g = d[d.model == m].groupby("N")["value"]
+            x = np.array(sorted(g.groups))
+            _band(ax, x, g.mean().loc[x].values, g.std(ddof=1).loc[x].values, m)
+        ax.set(yscale="log", xlabel="soliton order N", ylabel=ylab)
+    axes[0].set_title("complex field (phase-sensitive)")
+    axes[1].set_title("intensity only")
+    axes[1].legend(ncol=2, fontsize=7.5)
+    fig.suptitle(f"{REG_TITLE[regime]}: N-extrapolation (mean ± std over {nseed} seeds)", fontsize=10)
     fig.tight_layout()
     style.save(fig, FIG / f"fig_extrap_N_{'regime' + regime if regime == 'A' else regime}")
 
@@ -130,16 +135,19 @@ def fig_pareto(long, runs, regime="A"):
     r = runs[(runs.regime == regime) & (runs.exp == "n_extrap") & (runs.tag == "")]
     fig, axes = plt.subplots(1, 2, figsize=(9.5, 3.8), sharey=False)
     sp_far = "far" if regime == "A" else "extrap"
-    for ax, sp, xcol, xlabel in [(axes[0], "interp", "train_wall_s", "training wall-clock (s)"),
-                                 (axes[1], sp_far, "train_wall_s", "training wall-clock (s)")]:
+    for ax, sp in [(axes[0], "interp"), (axes[1], sp_far)]:
         for m in _models(d):
             e = d[(d.model == m) & (d.split == sp)].groupby("seed")["value"].mean()
-            t = r[r.model == m].set_index("seed")[xcol].reindex(e.index)
+            rr = r[r.model == m].set_index("seed").reindex(e.index)
             lab, col, mk, _ = MODELS[m]
-            ax.scatter(t, e, color=col, marker=mk, s=36, label=lab, edgecolor="white", linewidth=0.8, zorder=3)
+            ax.scatter(rr["train_wall_s"], e, color=col, marker=mk, s=36, label=lab + " (training)",
+                       edgecolor="white", linewidth=0.8, zorder=3)
+            ax.scatter(rr["inference_s_per_field"], e, facecolor="none", edgecolor=col, marker=mk, s=36,
+                       linewidth=1.2, zorder=3, label=None)
+        ax.scatter([], [], facecolor="none", edgecolor=style.INK2, marker="o", s=36, label="hollow: model inference")
         if cost.exists():
             c = pd.read_csv(cost)
-            c = c[c.regime == regime]
+            c = c[(c.regime == regime) & (c.rel_l2 > 1e-8)]  # drop configs equal to the reference itself
             ns = [n for n in sorted(c.N.unique())]
             for k, n in enumerate(ns):
                 cc = c[c.N == n].sort_values("wall_s")
@@ -148,7 +156,8 @@ def fig_pareto(long, runs, regime="A"):
                         label="SSFM (cost ladder, one field)" if k == 0 else None)
                 ax.annotate(f"N={n:g}", (front.wall_s.iloc[-1], front.rel_l2.iloc[-1]), fontsize=6.5,
                             color=style.INK2, xytext=(3, 0), textcoords="offset points")
-        ax.set(xscale="log", yscale="log", xlabel=xlabel, ylabel="relative L2 error",
+        ax.set(xscale="log", yscale="log", xlabel="wall-clock (s): model training / inference, SSFM solve",
+               ylabel="relative L2 error",
                title=f"{REG_TITLE[regime]}: {sp} split")
     axes[0].legend(fontsize=6.5, loc="best")
     fig.text(0.5, -0.02, "Models: one training run serves all N; SSFM: cost of ONE field per point "
@@ -202,6 +211,7 @@ def fig_heatmaps_compare(sweep, regime="A", n_pair=(1.5, 4.0)):
     for ax in axes.ravel():
         ax.grid(False)
         ax.tick_params(labelsize=6)
+    fig.subplots_adjust(hspace=0.45, wspace=0.25)
     fig.colorbar(im, ax=axes[:, -1], fraction=0.05, label="|error| / max|U|")
     fig.suptitle(f"{REG_TITLE[regime]}: intensity (power-law colour scale) and error, seed 0; "
                  f"rows: N={n_pair[0]:g} (interp), N={n_pair[1]:g} (far)", fontsize=9)
