@@ -99,7 +99,7 @@ def aggregate():
         e = np.array([r["rel_l2"] for r in rs])
         lines.append(f"| {preset} | {paper_fig[preset]} | {len(rs)} | {e.mean():.4f} ± {e.std(ddof=1) if len(e) > 1 else float('nan'):.4f} "
                      f"| {np.median(e):.4f} | {rs[0]['reported_seed42']:.4f} | {np.mean([r['wall_s'] for r in rs]):.0f} |")
-    (ROOT / "results" / "repro_repo.md").write_text("\n".join(lines) + "\n")
+    (ROOT / "results" / "repro_repo.md").write_text("\n".join(lines) + "\n", encoding="utf-8")
     print("\n".join(lines))
 
 
