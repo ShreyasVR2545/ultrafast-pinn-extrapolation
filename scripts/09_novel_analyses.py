@@ -15,6 +15,7 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
+from scipy.stats import spearmanr
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
@@ -78,6 +79,22 @@ def stats_B(w):
                 continue
             rho, lo, hi, n = spearman_ci(d, x, "rel_l2", cluster=("cl", "seed"))
             rows.append({"model": m, "exp": exp, "estimator": x, "rho": rho, "ci_lo": lo, "ci_hi": hi, "n": n})
+    # Within-N test (removes the N confound): at each (regime, exp, N), rank all model/seed predictions
+    # by the label-free estimator and by true error; average Spearman rho over N, bootstrap CI over N.
+    for exp, d in w.groupby("exp"):
+        for x in ["energy_drift_max", "hamiltonian_drift_max", "grid_residual"]:
+            per = []
+            for _, g in d.groupby(["regime", "N"]):
+                g = g[[x, "rel_l2"]].replace([np.inf, -np.inf], np.nan).dropna()
+                if len(g) >= 5:
+                    per.append(spearmanr(g[x], g.rel_l2).statistic)
+            per = np.array(per)
+            rng = np.random.default_rng(0)
+            boots = [np.nanmean(rng.choice(per, per.size)) for _ in range(2000)] if per.size else [np.nan]
+            rows.append({"model": "ALL (within-N, across models)", "exp": exp, "estimator": x,
+                         "rho": float(np.nanmean(per)) if per.size else np.nan,
+                         "ci_lo": float(np.nanpercentile(boots, 2.5)), "ci_hi": float(np.nanpercentile(boots, 97.5)),
+                         "n": int(per.size)})
     out = pd.DataFrame(rows)
     out.to_csv(RES / "analysis_B_spearman.csv", index=False)
     return out
@@ -105,6 +122,9 @@ def fig_A(pts, st):
                    ylabel="relative L2 per slice", title=f"{exp}: error vs {x}")
             if x == "phi_excess":
                 ax.set_xscale("symlog", linthresh=0.1)
+                ax.set_xlim(left=0)
+                ax.text(0.01, 0.02, "Δφ = 0: inside the training box", transform=ax.transAxes, fontsize=7,
+                        color=style.INK2)
             ax.legend(fontsize=6, markerscale=2.5)
     fig.tight_layout()
     style.save(fig, ROOT / "figures" / "fig_error_vs_spectral_shift")
