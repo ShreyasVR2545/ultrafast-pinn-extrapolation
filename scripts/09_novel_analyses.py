@@ -42,8 +42,11 @@ def build_A(sweep):
     pts = pts[~is_z | (pts.xi > 2.0 + 1e-9)]
     keep = ["model", "regime", "exp", "split", "N", "seed", "xi", "err", "wf_train", "wf_input", "phi_eff",
             "phi_excess"]
-    pts[keep].to_csv(RES / "analysis_A_points.csv.gz", index=False, compression="gzip")
-    return pts[keep]
+    out = pts[keep].copy()
+    for c in ["err", "wf_train", "wf_input", "phi_eff", "phi_excess"]:  # 4 sig. figs keep the file < 5 MB
+        out[c] = out[c].map(lambda v: float(f"{v:.4g}"))
+    out.to_csv(RES / "analysis_A_points.csv.gz", index=False, compression="gzip")
+    return out
 
 
 def stats_A(pts):
