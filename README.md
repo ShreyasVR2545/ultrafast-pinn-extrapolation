@@ -51,18 +51,41 @@ tuned only on the interpolation split. In z-extrapolation, every model, includin
 **Causal training note:** PINN+ uses the causal residual weighting of Wang, Sankaran & Perdikaris (CMAME 2024). That
 method is patented for commercial use. Academic use, as here, is fine.
 
+## Results
+
+See **`report/results_summary.md`** (generated: key findings, tables, captions, limitations) and
+`report/figure_index.md` (every figure, what it shows, and how to regenerate it).
+
 ## Reproduce
 
-| Step | Command | Approx. runtime (RTX 5070 Laptop) |
+Runtimes were measured on an RTX 5070 Laptop GPU (8 GB) with an Intel Core Ultra 9 275HX.
+
+**From the committed results only (fresh clone, no GPU, no data):**
+```bash
+pytest                                     # 42 tests (1 skipped without the submodule), ~30 s
+python scripts/make_tables.py              # report/tables/*, seconds
+python scripts/make_figures.py             # core figures; heatmaps/spectra need data/ + runs/ (skipped otherwise)
+python scripts/09_novel_analyses.py --figures-only
+python scripts/make_ablation_figures.py
+python scripts/make_summary.py             # report/results_summary.md
+```
+These regenerate byte-identical PNGs, tables and summary (checked on a fresh clone).
+
+**Full pipeline from scratch:**
+
+| Step | Command | Runtime |
 |---|---|---|
 | Environment report and benchmarks | `python scripts/00_env_check.py`, `python scripts/01_benchmark.py` | 2 min |
-| Starter-repo reproduction | `python scripts/02_reproduce_repo.py --presets fig3 fig7 --seeds 0 1 2` | ~1 h |
-| SSFM validation, grid, gallery | `python scripts/03_validate_ssfm.py` | 15 min (CPU) |
-| Datasets | `python scripts/04_generate_data.py` | 2 min (CPU, 6 workers) |
+| Starter-repo reproduction | `git submodule update --init`; `python scripts/02_reproduce_repo.py --presets fig3 fig7 --seeds 0 1 2` | fig3 ~17 min per seed, fig7 ~6 min per seed |
+| SSFM validation, grid, gallery | `python scripts/03_validate_ssfm.py` | 13 min (CPU) |
+| Datasets (37 fields, 146 MB) | `python scripts/04_generate_data.py` | 2 min (CPU, 6 workers) |
 | SSFM cost ladder | `python scripts/05_ssfm_cost.py` | ~10 min (CPU) |
-| One experiment | `python scripts/run_experiment.py --model pinn_strict --regime A --exp n_extrap --seed 0` | see `PROGRESS.md` |
-| Main sweep | `python scripts/run_sweep.py --blocks a b c d` | see `PROGRESS.md` |
-| Tables | `python scripts/make_tables.py --aggregate` | seconds |
-| Figures | `python scripts/make_figures.py` | ~1 min |
+| PINN implementation check | `python scripts/06_pinn_check_fig3.py --adam 2000 --lbfgs 20000` | 18 min |
+| One experiment | `python scripts/run_experiment.py --model pinn_strict --regime A --exp n_extrap --seed 0` | PINN 15-16 min, DD-MLP 6 min, cFNO 4-7 min |
+| Main sweep (84 runs) | `python scripts/run_sweep.py --blocks a b c d --seeds 0 1 2` | 14.8 h |
+| Ablations (23 runs) | `python scripts/run_sweep.py --plan configs/ablations.yaml --sweep ablations` | 4.6 h |
+| Analyses A and B | `python scripts/09_novel_analyses.py` (needs data/) | ~3 min (CPU) |
+| Fine-tuning vs SSFM | `python scripts/10_finetune.py --seeds 0` | 45 min |
+| Aggregate, tables, figures, summary | `python scripts/make_tables.py --aggregate`, `python scripts/make_ablation_figures.py --aggregate`, then the commands above | ~2 min |
 
-Every script supports `--smoke` (under 60 s) where it trains or simulates.
+Every training and simulation script supports `--smoke` (under 60 s).
