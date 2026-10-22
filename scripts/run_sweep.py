@@ -27,7 +27,8 @@ BLOCKS = {  # priority order from the brief
     "a": [("A", "n_extrap", N_MODELS)],
     "b": [("A", "z_extrap", Z_MODELS)],
     "c": [("B_sech", "n_extrap", N_MODELS), ("B_gauss", "n_extrap", N_MODELS)],
-    "d": [("B_sech", "z_extrap", Z_MODELS), ("B_gauss", "z_extrap", Z_MODELS)],
+    "d": [("B_sech", "z_extrap", Z_MODELS)],          # B_gauss z_extrap dropped (D-028)
+    "d2": [("B_gauss", "z_extrap", Z_MODELS)],        # only if time remains
 }
 
 

@@ -8,5 +8,6 @@ plus:
   causal: true
   causal_bins: 32
   causal_eps: [0.01, 0.1, 1.0, 10.0, 100.0]
+  causal_lbfgs: true      # keep causal weights (at the reached epsilon) during L-BFGS
   adaptive_weights: true
   adapt_every: 100

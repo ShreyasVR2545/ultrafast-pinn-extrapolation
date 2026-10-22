@@ -1,15 +1,18 @@
 # Shared by pinn_strict, pinn_extended, pinn_plus and dd_mlp (fairness: identical trunk + schedule).
 # cfno/cfno_ar use the same total optimizer-step budget (adam_steps + lbfgs_steps, Adam only).
+# Frozen after Regime A pilots judged on the INTERP split only (DECISIONS D-025..D-030).
 arch: {width: 100, depth: 4, act: tanh}
 schedule:
-  adam_steps: 10000
+  adam_steps: 2000
   lr: 1.0e-3
   lr_final: 1.0e-4
   resample_every: 100
-  lbfgs_steps: 2000
+  lbfgs_steps: 20000
   lbfgs_history: 50
+  lbfgs_resample_every: 2000   # fresh batch + L-BFGS state every 2000 its (prevents collocation overfitting)
   log_every: 100
 sampling:
-  n_col: 20000        # collocation (PINN) / data points (DD-MLP) per Adam batch
-  n_col_lbfgs: 20000  # fixed batch for L-BFGS
+  n_col: 20000        # collocation (PINN) / data points (DD-MLP) per batch
+  n_col_lbfgs: 20000
   n_ic: 1024          # IC points per batch (PINN family only)
+  tau_focus: {frac: 0.5, sigma: 8.0}   # half of tau samples ~ N(0, 8^2), half uniform; same for PINN and DD
