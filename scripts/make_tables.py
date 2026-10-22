@@ -103,7 +103,7 @@ def main():
            "seeds (median in brackets).", ""]
     for regime in ["A", "B_sech", "B_gauss"]:
         for exp in ["n_extrap", "z_extrap"]:
-            for metric, pct in [("rel_l2", True), ("spectral_err", True), ("energy_drift_max", False)]:
+            for metric, pct in [("rel_l2", True), ("rel_l2_intensity", True), ("phase_err", False), ("spectral_err", True), ("energy_drift_max", False)]:
                 md, tex = table(long, regime, exp, metric, pct, a.tag)
                 if md is None:
                     continue
