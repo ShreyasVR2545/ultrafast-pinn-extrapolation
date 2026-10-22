@@ -81,7 +81,7 @@ def fig_extrap_N(long, regime, sweep):
 
 
 def fig_extrap_z(slices, sweep):
-    d = slices[(slices.metric == "rel_l2") & (slices.exp == "z_extrap") & (slices.tag == "")]
+    d = slices[(slices.metric == "rel_l2") & (slices.exp == "z_extrap") & (slices.tag == "") & (slices.xi > 0)]
     if d.empty:
         return
     regs = [r for r in ["A", "B_sech", "B_gauss"] if r in set(d.regime)]
