@@ -45,8 +45,11 @@ def write(sweep: str, out_dir: Path | None = None):
     long.to_csv(out_dir / f"{sweep}_long.csv", index=False)
     runs.to_csv(out_dir / f"{sweep}_runs.csv", index=False)
     if not slices.empty:  # keep the committed CSV small: only the metrics used in figures
-        keep = slices["metric"].isin(["rel_l2", "energy_drift", "hamiltonian_drift", "spectral_err"])
-        slices[keep].to_csv(out_dir / f"{sweep}_slices.csv.gz", index=False, compression="gzip")
+        # committed file must stay < 5 MB: only the per-xi metrics used by figures/analyses, 4 sig. figs
+        s = slices[slices["metric"].isin(["rel_l2", "energy_drift"])].copy()
+        s["value"] = s["value"].map(lambda v: float(f"{v:.4g}"))
+        s["xi"] = s["xi"].round(4)
+        s.to_csv(out_dir / f"{sweep}_slices.csv.gz", index=False, compression="gzip")
     return long, runs, slices
 
 

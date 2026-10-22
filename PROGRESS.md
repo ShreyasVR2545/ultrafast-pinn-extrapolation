@@ -64,3 +64,18 @@
 **Sanity checks:** error grows with N for every model. The DD-MLP fits its training N at ~1-4%. Our PINN matches the starter repo on its own fig3 problem (3.5% vs 3.0%), which validates the implementation.
 **Problems / surprises:** the first PINN pilots failed (16-94% in-distribution). Three causes, all ours and all fixed: an L-BFGS-starved schedule, a forced causal-ε advance, and PINN+ overfitting a fixed L-BFGS collocation set (D-025 to D-029). The PINNs remain worse than the data-driven models *in distribution* at equal optimizer steps, and they cost 3-5× more wall-clock.
 **Next:** the Phase 7 main sweep was launched (blocks a→b→c→d, 3 seeds), estimated ~17 GPU-h (D-028 scope: B_gauss z_extrap dropped unless time remains).
+
+## Checkpoint 7: Main experiments (2026-10-22, finished 21:19)
+**Status:** done. 84/84 jobs ok (0 diverged, 0 crashed) in 14.8 h. Scope per D-028: B_gauss z_extrap was not run.
+**What I did:** `run_sweep.py` blocks a→d, 3 seeds. Aggregated to `results/main_*.csv`, tables in `report/tables/main_*`, figures `fig_extrap_N_*`, `fig_extrap_z`, `fig_heatmaps_compare*`, `fig_spectra_far*`, `fig_energy_drift*`, `fig_pareto`. Analyses A and B ran on all runs (`results/analysis_*`). All numbers and findings are generated in `report/results_summary.md` (`scripts/make_summary.py`).
+**Key results (plain language; numbers in report/results_summary.md):**
+- In distribution, the data-driven models (cFNO, DD-MLP) are 3-10× more accurate than every PINN variant, in every regime, at equal optimizer steps and 2-3× less wall-clock.
+- Near extrapolation (Regime A, N = 2.25-2.5), the DD-MLP is still best. Robust across seeds.
+- Far extrapolation (A: N = 3-4; B: N = 2-3), **every model fails on the complex field** (≥ ~100% rel-L2, phase lost). Physics-informed models keep the intensity and energy far more plausible: the lowest far-N energy drift in all three regimes is PINN-extended or PINN+, and the DD-MLP is worst on far-N intensity in all regimes. The best far-N intensity model is PINN-extended (A, robust), cFNO-AR (B_sech, robust) or PINN+ (B_gauss, not robust).
+- z-extrapolation has no class winner: DD-MLP is best in A and worst in B_sech, where the autoregressive cFNO is best.
+- In Regime B the DD-MLP memorizes its training N (accurate at train N, ~10× worse at interp N in between). The PINN error curves are smooth in N and smallest at the N = 1 soliton.
+- Cost: an SSFM at the best model's accuracy takes ≤ 9 ms in Regime A, less than model inference. In the hardest B cases it takes up to ~230 ms, but it is never less accurate, and the models' training cost comes on top.
+**Sanity checks:** error grows with N and beyond ξ = 2 for every model. There is no too-good extrapolation, so no leakage concern. Seed-to-seed std is small relative to the between-model gaps that are labelled robust.
+**Problems / surprises:** the PINN in-distribution fit is markedly worse in Regime B (hyperparameters were tuned on Regime A interp only). cFNO-AR rollouts diverge on some seeds at far N (A: huge intensity errors).
+**Commits:** results + figures per block. Merged to main, tag `m3-main-results`, pushed: y.
+**Next:** Phase 8 ablations (running, 23 jobs, ~4.3 h), then fine-tuning (Phase 9.3), then Phase 10.
