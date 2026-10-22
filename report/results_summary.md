@@ -142,8 +142,10 @@ Main sweep: 39 completed runs, 0 diverged, 0 crashed jobs (see `runs/main/sweep_
   Visual check of *how* each model fails.
 * `fig_spectra_far`: output spectra at far N. Shows which models reproduce the SPM-broadened spectrum.
 * `fig_energy_drift`: energy drift vs ξ. Physically implausible predictions are visible without ground truth.
-* `fig_pareto`: accuracy vs wall-clock, including SSFM. Takeaway: for this 1-D NLSE, a cheap SSFM run dominates every
-  learned model in both speed and accuracy.
+* `fig_pareto`: accuracy vs wall-clock, including SSFM. Takeaway: in Regime A a few-millisecond SSFM run beats every
+  learned model on both speed and accuracy. In the harder anomalous-dispersion cases, an SSFM at the models' accuracy can
+  be slower than model inference (see the SSFM finding), but it is never less accurate, and the models' training cost
+  comes on top.
 * `fig_error_vs_spectral_shift` (analysis A), `fig_drift_vs_error` and `fig_energy_vs_phase` (analysis B).
 * `fig_ablation_range_width`, `fig_ablation_components`, `fig_finetune`: ablations and the optional extras.
 
