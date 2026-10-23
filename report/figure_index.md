@@ -18,6 +18,7 @@ data and run predictions (`scripts/04_generate_data.py` and the sweep).
 | `fig_energy_drift` (+ `_B_sech`) | Energy drift vs ξ per model, interp vs far | Physical plausibility | `python scripts/make_figures.py --only energy_drift` (from results/) |
 | `fig_pareto` | Accuracy vs wall-clock: model training (filled), model inference (hollow), SSFM cost ladder (stars) | **Cost: is it worth it?** | `python scripts/make_figures.py --only pareto` (from results/) |
 | `fig_error_vs_spectral_shift` | Analysis A: per-slice error vs WF distance to the training spectra and vs excess SPM phase, Spearman ρ with 95% CI | Analysis A | `python scripts/09_novel_analyses.py --figures-only` (from results/) |
+| `fig_error_predictors_baselines` | Analysis A check (D-031): Spearman ρ of the SPM phase, the WF distance and coordinate-only baselines (ξ, N, N²ξ, rank(N)+rank(ξ)) per model, with CIs. The physical predictors do not beat the baselines | Analysis A, honest caveat | `python scripts/09_novel_analyses.py --figures-only` (from results/) |
 | `fig_drift_vs_error` | Analysis B: true error vs label-free energy drift, Hamiltonian drift and grid PDE residual, per model | Analysis B | same |
 | `fig_energy_vs_phase` | Energy drift vs phase error: conserving energy does not certify the phase | Analysis B caveat | same |
 | `fig_ablation_*` | Phase 8 ablations (training-range width, PINN+ components, collocation, IC weight, data efficiency) | Backup / Q&A | `python scripts/make_ablation_figures.py` (from results/) |

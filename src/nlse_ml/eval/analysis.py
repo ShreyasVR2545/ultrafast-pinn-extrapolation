@@ -11,7 +11,9 @@ A. Spectral shift as an error predictor (extension of Fesser et al. 2023 to para
 B. Label-free error estimators: energy drift, Hamiltonian drift, grid PDE residual (and autograd
    residual for MLP models) vs true error, per (run, N).
 
-Statistics: Spearman rho per model, 95% CI by cluster bootstrap over (N, seed) groups.
+Statistics: Spearman rho per model (pooled and per regime), 95% CI by cluster bootstrap over
+(regime, N, seed) groups; phi_eff is compared against coordinate-only baselines (BASELINES), which it does
+not meaningfully beat (D-031).
 """
 from __future__ import annotations
 

@@ -5,7 +5,8 @@ computed from CDFs:  W = sum_k |F1(omega_k) - F2(omega_k)| * d_omega. (Fesser et
 unit-spacing sum; multiplying by d_omega gives the distance in units of omega T0, so a pure
 frequency shift by delta gives W = delta.)
 
-spm_phase(N, xi, pulse): closed-form, label-free predictor of SPM spectral broadening.
+spm_phase(N, xi, pulse): closed-form, label-free proxy for the accumulated SPM phase (a driver of spectral
+broadening). Note: as an ERROR predictor it does not beat coordinate-only baselines such as N^2*xi (D-031).
   phi_max = N^2 xi                        (no dispersion)
   phi_eff = N^2 asinh(xi)                 (peak power of a GVD-broadened Gaussian is (1+xi^2)^(-1/2),
                                            so int_0^xi P_peak dxi' = asinh(xi); used as the

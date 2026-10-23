@@ -109,12 +109,44 @@ def findings(long, runs):
     a = RES / "analysis_A_spearman.csv"
     if a.exists():
         sa = pd.read_csv(a)
+        if "regime" in sa:
+            sa = sa[sa.regime == "ALL"]  # pooled over regimes; per-regime rows are in the CSV
+        bl = RES / "analysis_A_phi_vs_baselines.csv"
+        dv = pd.read_csv(bl) if bl.exists() else pd.DataFrame()
+        names = {"xi_only": "ξ alone", "N_only": "N alone", "N2_xi": "N²ξ", "rank_N_plus_rank_xi": "rank(N)+rank(ξ)"}
         for exp in sa.exp.unique():
-            for pred in ["wf_train", "phi_eff"]:
+            for pred in ["wf_train", "phi_eff", "N2_xi", "rank_N_plus_rank_xi", "xi_only"]:
                 s = sa[(sa.exp == exp) & (sa.predictor == pred)]
+                if s.empty:
+                    continue
                 F.append(f"**Analysis A ({exp}), error vs {pred}:** Spearman ρ " + ", ".join(
                     f"{LAB[m]} {row.rho:.2f} [{row.ci_lo:.2f}, {row.ci_hi:.2f}]" for m, row in s.set_index("model").iterrows())
-                         + ". See `fig_error_vs_spectral_shift`.")
+                         + ".")
+            if dv.empty:
+                continue
+            d = dv[dv.exp == exp]
+            parts = []
+            for b_, g in d.groupby("baseline", sort=False):
+                better = [LAB[m] for m, r in g.set_index("model").iterrows() if r.ci_lo > 0]
+                worse = [LAB[m] for m, r in g.set_index("model").iterrows() if r.ci_hi < 0]
+                tie = [LAB[m] for m, r in g.set_index("model").iterrows() if r.ci_lo <= 0 <= r.ci_hi]
+                parts.append(f"vs {names[b_]}: Δρ {g.rho_phi_minus_baseline.min():+.3f} to {g.rho_phi_minus_baseline.max():+.3f}"
+                             f" (φ_eff better: {', '.join(better) or 'none'}; worse: {', '.join(worse) or 'none'}; "
+                             f"CI includes 0: {', '.join(tie) or 'none'})")
+            F.append(f"**Analysis A ({exp}), is the SPM phase φ_eff = N² asinh ξ better than coordinate-only baselines?** "
+                     "ρ(φ_eff) − ρ(baseline), 95% cluster-bootstrap CI: " + "; ".join(parts)
+                     + ". See `fig_error_predictors_baselines`.")
+        if not dv.empty:
+            coord = dv[dv.baseline.isin(["N2_xi", "rank_N_plus_rank_xi"])]
+            n_max = coord[coord.exp == "n_extrap"].rho_phi_minus_baseline.abs().max()
+            z_all_worse = bool((coord[coord.exp == "z_extrap"].ci_hi < 0).all())
+            if n_max <= 0.06 and z_all_worse:  # the wording below is only emitted when the numbers support it
+                F.append(f"**Analysis A verdict (D-031):** φ_eff is no more than {n_max:.3f} in ρ away from coordinate-only "
+                         "baselines in N-extrapolation, and below them for every model in z-extrapolation. Per-slice "
+                         "error grows monotonically with N and ξ for every model, and φ_eff carries little information "
+                         "beyond that. It should not be read as a specific physical failure law.")
+            else:
+                F.append("**Analysis A verdict:** the baseline comparison changed; re-assess the wording (D-031).")
     b = RES / "analysis_B_spearman.csv"
     if b.exists():
         sb = pd.read_csv(b)
@@ -228,7 +260,8 @@ STATIC_FIGS = """## Figures
   learned model on both speed and accuracy. In the harder anomalous-dispersion cases, an SSFM at the models' accuracy can
   be slower than model inference (see the SSFM finding), but it is never less accurate, and the models' training cost
   comes on top.
-* `fig_error_vs_spectral_shift` (analysis A), `fig_drift_vs_error` and `fig_energy_vs_phase` (analysis B).
+* `fig_error_vs_spectral_shift` and `fig_error_predictors_baselines` (analysis A: spectral and SPM-phase predictors
+  vs coordinate-only baselines), `fig_drift_vs_error` and `fig_energy_vs_phase` (analysis B).
 * `fig_ablation_range_width`, `fig_ablation_components`, `fig_finetune`: ablations and the optional extras.
 """
 
@@ -245,9 +278,13 @@ STATIC_LIMITS = """## Limitations and threats to validity
 * The complex-field rel-L2 saturates near ~1.4 once the phase is lost, so it under-reports differences in intensity
   and observables far from training. We therefore report intensity, spectral and energy metrics alongside it.
 * Equal optimizer steps is not equal wall-clock: the PINNs cost 3-5× more per run (cost table).
-* Analysis A's WF distance to the training spectra uses ground truth, so it explains error after the fact; only
-  the SPM phase N² asinh ξ is an a-priori predictor. Pooled correlations are partly driven by N and ξ, which
-  is why analysis B also reports a within-N test.
+* Analysis A's WF distance to the training spectra uses ground truth, so it explains error after the fact. The SPM
+  phase N² asinh ξ is a-priori, but it is a monotone function of N and ξ, and it does not beat coordinate-only
+  baselines (N²ξ, rank(N)+rank(ξ); in z-extrapolation sometimes not even ξ alone). Its correlation therefore mostly
+  reflects "error grows with N and ξ" (D-031). Pooled correlations are driven by N and ξ, which is why analysis B
+  also reports a within-N test.
+* An earlier version of analysis A silently dropped 12.4% of slices because of a float-merge bug; it was fixed and
+  re-run (D-031). The corrected numbers are within ~0.01 of the old ones.
 * Single physical model (lossless scalar NLSE, no higher-order effects) and a single grid per regime; results may
   not transfer to GNLSE or supercontinuum.
 """
