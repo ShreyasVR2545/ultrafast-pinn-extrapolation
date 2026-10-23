@@ -57,6 +57,29 @@ def spectral_shift_table(regime: str) -> pd.DataFrame:
     return pd.DataFrame(rows)
 
 
+PREDICTORS = ["wf_input", "phi_eff", "wf_train_n", "wf_train_z", "phi_excess_n", "phi_excess_z"]
+
+
+def merge_shift(slices: pd.DataFrame, shift: pd.DataFrame, decimals: int = 6) -> pd.DataFrame:
+    """Left-merge per-slice errors with the spectral-shift table on (regime, N, xi).
+
+    The keys are rounded to `decimals` on BOTH sides: the committed slice CSV stores xi rounded to 4
+    decimals while the shift table uses the raw np.linspace values (e.g. 0.7 vs 0.7000000000000001),
+    and an exact-float merge silently left 24 of 201 slices without predictors (DECISIONS D-031).
+    Raises if any predictor is missing after the merge.
+    """
+    a, b = slices.copy(), shift.copy()
+    for d in (a, b):
+        d["_xi"] = d["xi"].round(decimals)
+        d["_N"] = d["N"].round(decimals)
+    out = a.merge(b.drop(columns=["xi", "N"]), on=["regime", "_N", "_xi"], how="left").drop(columns=["_xi", "_N"])
+    missing = out[PREDICTORS].isna().any(axis=1)
+    if missing.any():
+        raise ValueError(f"{int(missing.sum())} rows have no spectral-shift predictors after the merge, e.g. "
+                         f"{out.loc[missing, ['regime', 'N', 'xi']].head(3).to_dict('records')}")
+    return out
+
+
 def spearman_ci(df: pd.DataFrame, x: str, y: str, cluster=("N", "seed"), n_boot=1000, seed=0):
     d = df[[x, y, *cluster]].replace([np.inf, -np.inf], np.nan).dropna()
     if len(d) < 5 or d[x].nunique() < 3:

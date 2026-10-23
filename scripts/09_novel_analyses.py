@@ -20,7 +20,7 @@ from scipy.stats import spearmanr
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
 
-from nlse_ml.eval.analysis import spearman_ci, spectral_shift_table  # noqa: E402
+from nlse_ml.eval.analysis import merge_shift, spearman_ci, spectral_shift_table  # noqa: E402
 from nlse_ml.viz import style  # noqa: E402
 from nlse_ml.viz.style import MODELS  # noqa: E402
 
@@ -33,7 +33,7 @@ def build_A(sweep):
     sl = pd.read_csv(RES / f"{sweep}_slices.csv.gz")
     sl = sl[(sl.metric == "rel_l2") & (sl.tag.fillna("") == "")].rename(columns={"value": "err"})
     shift = pd.concat([spectral_shift_table(r) for r in sorted(sl.regime.unique())])
-    pts = sl.merge(shift, on=["regime", "N", "xi"], how="left")
+    pts = merge_shift(sl, shift)  # rounded keys; raises if any predictor is NaN (D-031)
     pts = pts[pts.xi > 0]
     is_z = pts.exp == "z_extrap"
     pts["wf_train"] = np.where(is_z, pts.wf_train_z, pts.wf_train_n)
@@ -45,6 +45,7 @@ def build_A(sweep):
     out = pts[keep].copy()
     for c in ["err", "wf_train", "wf_input", "phi_eff", "phi_excess"]:  # 4 sig. figs keep the file < 5 MB
         out[c] = out[c].map(lambda v: float(f"{v:.4g}"))
+    assert not out[["wf_train", "wf_input", "phi_eff", "phi_excess"]].isna().any().any(), "NaN predictors"
     out.to_csv(RES / "analysis_A_points.csv.gz", index=False, compression="gzip")
     return out
 
