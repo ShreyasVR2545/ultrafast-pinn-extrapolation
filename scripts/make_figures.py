@@ -211,7 +211,10 @@ def fig_heatmaps_compare(sweep, regime="A", n_pair=(1.5, 4.0)):
     for ax in axes.ravel():
         ax.grid(False)
         ax.tick_params(labelsize=6)
-    fig.subplots_adjust(hspace=0.45, wspace=0.25)
+        if ax.axison:  # every panel is a (tau, xi) map
+            ax.set_xlabel(r"$\tau = T/T_0$", fontsize=6, labelpad=1)
+            ax.set_ylabel(r"$\xi = z/L_D$", fontsize=6, labelpad=1)
+    fig.subplots_adjust(hspace=0.62, wspace=0.28)
     fig.colorbar(im, ax=axes[:, -1], fraction=0.05, label="|error| / max|U|")
     fig.suptitle(f"{REG_TITLE[regime]}: intensity (power-law colour scale) and error, seed 0; "
                  f"rows: N={n_pair[0]:g} (interp), N={n_pair[1]:g} (far)", fontsize=9)

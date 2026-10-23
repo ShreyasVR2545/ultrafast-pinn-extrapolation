@@ -20,7 +20,7 @@ from scipy.stats import spearmanr
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
 
-from nlse_ml.eval.analysis import spearman_ci, spectral_shift_table  # noqa: E402
+from nlse_ml.eval.analysis import BASELINES, add_baselines, merge_shift, spearman_ci, spearman_diff_ci, spectral_shift_table  # noqa: E402
 from nlse_ml.viz import style  # noqa: E402
 from nlse_ml.viz.style import MODELS  # noqa: E402
 
@@ -33,7 +33,7 @@ def build_A(sweep):
     sl = pd.read_csv(RES / f"{sweep}_slices.csv.gz")
     sl = sl[(sl.metric == "rel_l2") & (sl.tag.fillna("") == "")].rename(columns={"value": "err"})
     shift = pd.concat([spectral_shift_table(r) for r in sorted(sl.regime.unique())])
-    pts = sl.merge(shift, on=["regime", "N", "xi"], how="left")
+    pts = merge_shift(sl, shift)  # rounded keys; raises if any predictor is NaN (D-031)
     pts = pts[pts.xi > 0]
     is_z = pts.exp == "z_extrap"
     pts["wf_train"] = np.where(is_z, pts.wf_train_z, pts.wf_train_n)
@@ -45,19 +45,35 @@ def build_A(sweep):
     out = pts[keep].copy()
     for c in ["err", "wf_train", "wf_input", "phi_eff", "phi_excess"]:  # 4 sig. figs keep the file < 5 MB
         out[c] = out[c].map(lambda v: float(f"{v:.4g}"))
+    assert not out[["wf_train", "wf_input", "phi_eff", "phi_excess"]].isna().any().any(), "NaN predictors"
     out.to_csv(RES / "analysis_A_points.csv.gz", index=False, compression="gzip")
     return out
 
 
+A_PREDICTORS = ["wf_train", "phi_excess", "phi_eff", "wf_input", *BASELINES]
+CL = ("regime", "N_cl", "seed")  # clusters: an N value occurs in several regimes, so cluster on (regime, N, seed)
+
+
 def stats_A(pts):
-    rows = []
-    for (m, exp), d in pts.groupby(["model", "exp"]):
-        for x in ["wf_train", "phi_excess", "phi_eff", "wf_input"]:
-            rho, lo, hi, n = spearman_ci(d, x, "err")
-            rows.append({"model": m, "exp": exp, "predictor": x, "rho": rho, "ci_lo": lo, "ci_hi": hi, "n_points": n,
-                         "n_clusters": d.groupby(["regime", "N", "seed"]).ngroups})
+    """Spearman rho (95% cluster-bootstrap CI) of per-slice error vs each predictor, pooled over regimes
+    (regime = "ALL") and per regime; plus rho(phi_eff) - rho(baseline) differences (D-031)."""
+    rows, diffs = [], []
+    groups = [((m, exp, "ALL"), d) for (m, exp), d in pts.groupby(["model", "exp"])]
+    groups += [((m, exp, r), d) for (m, exp, r), d in pts.groupby(["model", "exp", "regime"])]
+    for (m, exp, reg), d in groups:
+        d = add_baselines(d).assign(N_cl=d["N"])
+        for x in A_PREDICTORS:
+            rho, lo, hi, n = spearman_ci(d, x, "err", cluster=CL, n_boot=1000 if reg == "ALL" else 300)
+            rows.append({"model": m, "exp": exp, "regime": reg, "predictor": x, "rho": rho, "ci_lo": lo, "ci_hi": hi,
+                         "n_points": n, "n_clusters": d.groupby(list(CL)).ngroups})
+        if reg == "ALL":
+            for x in BASELINES:
+                dr, lo, hi = spearman_diff_ci(d, "phi_eff", x, cluster=CL, n_boot=500)
+                diffs.append({"model": m, "exp": exp, "baseline": x, "rho_phi_minus_baseline": dr, "ci_lo": lo,
+                              "ci_hi": hi})
     out = pd.DataFrame(rows)
     out.to_csv(RES / "analysis_A_spearman.csv", index=False)
+    pd.DataFrame(diffs).to_csv(RES / "analysis_A_phi_vs_baselines.csv", index=False)
     return out
 
 
@@ -116,7 +132,7 @@ def fig_A(pts, st):
             for m in [m for m in MODELS if m in set(d.model)]:
                 dm = d[d.model == m]
                 dm = dm.iloc[:: max(1, len(dm) // 1500)]  # thin for readability; stats use all points
-                r = st[(st.model == m) & (st.exp == exp) & (st.predictor == x)]
+                r = st[(st.model == m) & (st.exp == exp) & (st.predictor == x) & (st.regime == "ALL")]
                 lab, col, mk, _ = MODELS[m]
                 rl = f" ρ={r.rho.iloc[0]:.2f} [{r.ci_lo.iloc[0]:.2f},{r.ci_hi.iloc[0]:.2f}]" if len(r) else ""
                 xv = dm[x] + (1e-4 if x == "phi_excess" else 0)
@@ -131,6 +147,32 @@ def fig_A(pts, st):
             ax.legend(fontsize=6, markerscale=2.5)
     fig.tight_layout()
     style.save(fig, ROOT / "figures" / "fig_error_vs_spectral_shift")
+
+
+def fig_A_baselines(st):
+    """Spearman rho of each predictor per model (pooled over regimes), with 95% CI: is phi_eff better than
+    predictors that use only the coordinates N and xi? (D-031)"""
+    style.apply()
+    preds = [("phi_eff", "SPM phase N² asinh ξ"), ("N2_xi", "N²·ξ"), ("rank_N_plus_rank_xi", "rank(N)+rank(ξ)"),
+             ("xi_only", "ξ only"), ("N_only", "N only"), ("wf_train", "WF dist. to training")]
+    st = st[st.regime == "ALL"]
+    exps = [e for e in ["n_extrap", "z_extrap"] if e in set(st.exp)]
+    fig, axes = plt.subplots(1, len(exps), figsize=(6.2 * len(exps), 3.8), squeeze=False)
+    for ax, exp in zip(axes[0], exps):
+        models = [m for m in MODELS if m in set(st[st.exp == exp].model)]
+        w = 0.8 / len(preds)
+        for k, (p, lab) in enumerate(preds):
+            r = st[(st.exp == exp) & (st.predictor == p)].set_index("model").reindex(models)
+            x = np.arange(len(models)) + (k - (len(preds) - 1) / 2) * w
+            ax.bar(x, r.rho, w * 0.9, color=style.PALETTE[k], label=lab)
+            ax.errorbar(x, r.rho, yerr=[r.rho - r.ci_lo, r.ci_hi - r.rho], fmt="none", ecolor=style.INK2, lw=0.8)
+        ax.set(xticks=range(len(models)), xticklabels=[MODELS[m][0] for m in models], ylim=(0, 1),
+               ylabel="Spearman ρ with per-slice error", title=f"{exp}: physical predictors vs coordinate baselines")
+        ax.tick_params(axis="x", labelsize=7)
+    h, lab = axes[0, 0].get_legend_handles_labels()
+    fig.legend(h, lab, fontsize=7, ncol=len(preds), loc="lower center", bbox_to_anchor=(0.5, -0.02))
+    fig.tight_layout(rect=(0, 0.07, 1, 1))
+    style.save(fig, ROOT / "figures" / "fig_error_predictors_baselines")
 
 
 def fig_B(w, st):
@@ -172,7 +214,7 @@ def main():
     ap.add_argument("--figures-only", action="store_true")
     a = ap.parse_args()
     if a.figures_only:
-        pts = pd.read_csv(RES / "analysis_A_points.csv.gz")
+        pts = pd.read_csv(RES / "analysis_A_points.csv.gz")  # noqa
         stA = pd.read_csv(RES / "analysis_A_spearman.csv")
         w = pd.read_csv(RES / "analysis_B_points.csv")
         stB = pd.read_csv(RES / "analysis_B_spearman.csv")
@@ -182,6 +224,7 @@ def main():
         w = build_B(a.sweep)
         stB = stats_B(w)
     fig_A(pts, stA)
+    fig_A_baselines(stA)
     fig_B(w, stB)
     with pd.option_context("display.width", 200, "display.max_rows", 200):
         print(stA.round(3).to_string())

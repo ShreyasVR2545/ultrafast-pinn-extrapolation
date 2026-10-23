@@ -45,20 +45,29 @@ Main sweep: 84 completed runs, 0 diverged, 0 crashed jobs (see `runs/main/sweep_
 15. **B_sech, z-extrapolation (ξ ∈ (2, 4], interp N):** cFNO-AR 12.3%, PINN+ 26.2%, cFNO 29.3%, PINN-strict 50.3%, DD-MLP 72.1%. Spectral error: cFNO-AR 8.7%, PINN-strict 13.0%, DD-MLP 18.7%, cFNO 27.6%, PINN+ 28.8%. See `fig_extrap_z`.
 16. **Cost (median per run):** training DD-MLP 6.1 min, cFNO 7.0 min, cFNO-AR 7.1 min, PINN-strict 15.4 min, PINN-extended 15.8 min, PINN+ 16.1 min; inference PINN-strict 44 ms, DD-MLP 46 ms, PINN-extended 47 ms, PINN+ 51 ms, cFNO 56 ms, cFNO-AR 108 ms per field.
 17. **SSFM at matched accuracy** (single-threaded NumPy, `results/ssfm_cost.csv`): A: matching the best model's interp error (0.88%) costs ≤ 9 ms per field (worst N in the ladder), and finer SSFM settings reach 8e-08 for every N; B_sech: matching the best model's interp error (2.17%) costs ≤ 229 ms per field (worst N in the ladder), and finer SSFM settings reach 4e-05 for every N; B_gauss: matching the best model's interp error (2.61%) costs ≤ 70 ms per field (worst N in the ladder), and finer SSFM settings reach 4e-05 for every N. Fastest model inference: 44 ms per field. See `fig_pareto`.
-18. **Analysis A (n_extrap), error vs wf_train:** Spearman ρ cFNO 0.64 [0.50, 0.74], cFNO-AR 0.57 [0.41, 0.70], DD-MLP 0.60 [0.45, 0.71], PINN-extended 0.44 [0.26, 0.61], PINN+ 0.48 [0.26, 0.65], PINN-strict 0.51 [0.30, 0.67]. See `fig_error_vs_spectral_shift`.
-19. **Analysis A (n_extrap), error vs phi_eff:** Spearman ρ cFNO 0.72 [0.63, 0.78], cFNO-AR 0.76 [0.70, 0.82], DD-MLP 0.77 [0.73, 0.80], PINN-extended 0.84 [0.79, 0.88], PINN+ 0.84 [0.80, 0.87], PINN-strict 0.87 [0.83, 0.90]. See `fig_error_vs_spectral_shift`.
-20. **Analysis A (z_extrap), error vs wf_train:** Spearman ρ cFNO 0.61 [0.52, 0.69], cFNO-AR 0.68 [0.60, 0.75], DD-MLP 0.48 [0.38, 0.59], PINN+ 0.55 [0.45, 0.66], PINN-strict 0.51 [0.42, 0.63]. See `fig_error_vs_spectral_shift`.
-21. **Analysis A (z_extrap), error vs phi_eff:** Spearman ρ cFNO 0.69 [0.64, 0.74], cFNO-AR 0.68 [0.62, 0.76], DD-MLP 0.17 [0.11, 0.26], PINN+ 0.70 [0.65, 0.74], PINN-strict 0.40 [0.34, 0.48]. See `fig_error_vs_spectral_shift`.
-22. **Analysis B (n_extrap), within-N across models:** energy_drift_max ρ=0.63 [0.56, 0.69], hamiltonian_drift_max ρ=0.55 [0.45, 0.63], grid_residual ρ=-0.30 [-0.44, -0.14]. A positive ρ means a lower label-free quantity picks the more accurate prediction at a fixed N. See `fig_drift_vs_error`.
-23. **Analysis B (z_extrap), within-N across models:** energy_drift_max ρ=0.74 [0.67, 0.80], hamiltonian_drift_max ρ=0.68 [0.58, 0.78], grid_residual ρ=0.69 [0.55, 0.82]. A positive ρ means a lower label-free quantity picks the more accurate prediction at a fixed N. See `fig_drift_vs_error`.
-24. **Ablation, PINN+ components (A, seed 0, interp / near):** all on 6.2% / 36.3%; no Fourier features 114.6% / 157.6%; no causal 7.5% / 40.2%; no adaptive weights 6.2% / 35.6%. See `fig_ablation_components`.
-25. **Ablation, PINN-strict collocation points (interp):** 10k 9.8%, 20k 8.3%, 50k 9.1%. **IC weight (interp / near):** w_ic=1 4.9% / 33.0%, w_ic=10 (used) 8.3% / 45.6%, w_ic=100 24.0% / 74.4%. w_ic was not tuned before the main study, so the PINNs could be somewhat better (single seed).
-26. **Ablation, data efficiency (interp, 2 / 4 / 6 training N):** DD-MLP 82.0% / 1.9% / 2.0%; cFNO 22.1% / 1.6% / 0.9%. The PINNs use no field data.
-27. **Ablation, training-range width:** see `fig_ablation_range_width` (error vs distance outside the training range, seeds 0-1). PINN-strict's curves for the three range widths nearly coincide, while the data-driven models trained on the narrow range degrade faster with distance.
-28. **Fine-tuning at A N=3:** starting at 134% error, the PINN did not reach its in-distribution error (8.3%) in 6000 steps; best 59.7% within 619 s of fine-tuning, final 60.5%. See `fig_finetune`.
-29. **Fine-tuning at A N=4:** starting at 135% error, the PINN did not reach its in-distribution error (8.3%) in 6000 steps; best 119.6% within 618 s of fine-tuning, final 120.3%. See `fig_finetune`.
-30. **Fine-tuning at B_sech N=2:** starting at 137% error, the PINN did not reach its in-distribution error (19.5%) in 6000 steps; best 83.7% within 619 s of fine-tuning, final 84.4%. See `fig_finetune`.
-31. **Fine-tuning at B_sech N=3:** starting at 215% error, the PINN did not reach its in-distribution error (19.5%) in 6000 steps; best 95.6% within 809 s of fine-tuning, final 127.3%. See `fig_finetune`.
+18. **Analysis A (n_extrap), error vs wf_train:** Spearman ρ cFNO 0.64 [0.54, 0.73], cFNO-AR 0.57 [0.46, 0.67], DD-MLP 0.60 [0.51, 0.69], PINN-extended 0.44 [0.32, 0.57], PINN+ 0.47 [0.34, 0.61], PINN-strict 0.51 [0.38, 0.63].
+19. **Analysis A (n_extrap), error vs phi_eff:** Spearman ρ cFNO 0.72 [0.66, 0.77], cFNO-AR 0.76 [0.71, 0.81], DD-MLP 0.78 [0.75, 0.80], PINN-extended 0.83 [0.79, 0.87], PINN+ 0.84 [0.81, 0.86], PINN-strict 0.87 [0.85, 0.89].
+20. **Analysis A (n_extrap), error vs N2_xi:** Spearman ρ cFNO 0.72 [0.68, 0.76], cFNO-AR 0.78 [0.75, 0.82], DD-MLP 0.79 [0.77, 0.81], PINN-extended 0.84 [0.81, 0.86], PINN+ 0.81 [0.79, 0.84], PINN-strict 0.84 [0.82, 0.87].
+21. **Analysis A (n_extrap), error vs rank_N_plus_rank_xi:** Spearman ρ cFNO 0.73 [0.69, 0.77], cFNO-AR 0.76 [0.72, 0.80], DD-MLP 0.83 [0.81, 0.85], PINN-extended 0.81 [0.78, 0.84], PINN+ 0.82 [0.79, 0.84], PINN-strict 0.85 [0.82, 0.87].
+22. **Analysis A (n_extrap), error vs xi_only:** Spearman ρ cFNO 0.42 [0.36, 0.49], cFNO-AR 0.59 [0.51, 0.67], DD-MLP 0.50 [0.42, 0.58], PINN-extended 0.56 [0.51, 0.62], PINN+ 0.42 [0.37, 0.49], PINN-strict 0.42 [0.36, 0.49].
+23. **Analysis A (n_extrap), is the SPM phase φ_eff = N² asinh ξ better than coordinate-only baselines?** ρ(φ_eff) − ρ(baseline), 95% cluster-bootstrap CI: vs ξ alone: Δρ +0.167 to +0.453 (φ_eff better: cFNO, cFNO-AR, DD-MLP, PINN-extended, PINN+, PINN-strict; worse: none; CI includes 0: none); vs N alone: Δρ +0.109 to +0.276 (φ_eff better: cFNO, cFNO-AR, DD-MLP, PINN-extended, PINN+, PINN-strict; worse: none; CI includes 0: none); vs N²ξ: Δρ -0.025 to +0.030 (φ_eff better: PINN+, PINN-strict; worse: cFNO-AR; CI includes 0: cFNO, DD-MLP, PINN-extended); vs rank(N)+rank(ξ): Δρ -0.051 to +0.025 (φ_eff better: PINN-extended, PINN+, PINN-strict; worse: DD-MLP; CI includes 0: cFNO, cFNO-AR). See `fig_error_predictors_baselines`.
+24. **Analysis A (z_extrap), error vs wf_train:** Spearman ρ cFNO 0.60 [0.47, 0.72], cFNO-AR 0.68 [0.56, 0.78], DD-MLP 0.47 [0.34, 0.62], PINN+ 0.55 [0.39, 0.69], PINN-strict 0.50 [0.37, 0.64].
+25. **Analysis A (z_extrap), error vs phi_eff:** Spearman ρ cFNO 0.69 [0.64, 0.74], cFNO-AR 0.69 [0.58, 0.77], DD-MLP 0.17 [0.07, 0.29], PINN+ 0.71 [0.65, 0.75], PINN-strict 0.39 [0.32, 0.48].
+26. **Analysis A (z_extrap), error vs N2_xi:** Spearman ρ cFNO 0.78 [0.73, 0.82], cFNO-AR 0.76 [0.68, 0.83], DD-MLP 0.28 [0.19, 0.41], PINN+ 0.79 [0.74, 0.83], PINN-strict 0.51 [0.44, 0.59].
+27. **Analysis A (z_extrap), error vs rank_N_plus_rank_xi:** Spearman ρ cFNO 0.89 [0.86, 0.92], cFNO-AR 0.84 [0.78, 0.89], DD-MLP 0.54 [0.46, 0.63], PINN+ 0.90 [0.87, 0.93], PINN-strict 0.76 [0.71, 0.81].
+28. **Analysis A (z_extrap), error vs xi_only:** Spearman ρ cFNO 0.70 [0.67, 0.75], cFNO-AR 0.62 [0.57, 0.70], DD-MLP 0.76 [0.72, 0.80], PINN+ 0.68 [0.64, 0.74], PINN-strict 0.84 [0.78, 0.90].
+29. **Analysis A (z_extrap), is the SPM phase φ_eff = N² asinh ξ better than coordinate-only baselines?** ρ(φ_eff) − ρ(baseline), 95% cluster-bootstrap CI: vs ξ alone: Δρ -0.590 to +0.064 (φ_eff better: none; worse: DD-MLP, PINN-strict; CI includes 0: cFNO, cFNO-AR, PINN+); vs N alone: Δρ +0.120 to +0.156 (φ_eff better: cFNO, cFNO-AR, DD-MLP, PINN+, PINN-strict; worse: none; CI includes 0: none); vs N²ξ: Δρ -0.118 to -0.077 (φ_eff better: none; worse: cFNO, cFNO-AR, DD-MLP, PINN+, PINN-strict; CI includes 0: none); vs rank(N)+rank(ξ): Δρ -0.373 to -0.156 (φ_eff better: none; worse: cFNO, cFNO-AR, DD-MLP, PINN+, PINN-strict; CI includes 0: none). See `fig_error_predictors_baselines`.
+30. **Analysis A verdict (D-031):** φ_eff is no more than 0.051 in ρ away from coordinate-only baselines in N-extrapolation, and below them for every model in z-extrapolation. Per-slice error grows monotonically with N and ξ for every model, and φ_eff carries little information beyond that. It should not be read as a specific physical failure law.
+31. **Analysis B (n_extrap), within-N across models:** energy_drift_max ρ=0.63 [0.56, 0.69], hamiltonian_drift_max ρ=0.55 [0.45, 0.63], grid_residual ρ=-0.30 [-0.44, -0.14]. A positive ρ means a lower label-free quantity picks the more accurate prediction at a fixed N. See `fig_drift_vs_error`.
+32. **Analysis B (z_extrap), within-N across models:** energy_drift_max ρ=0.74 [0.67, 0.80], hamiltonian_drift_max ρ=0.68 [0.58, 0.78], grid_residual ρ=0.69 [0.55, 0.82]. A positive ρ means a lower label-free quantity picks the more accurate prediction at a fixed N. See `fig_drift_vs_error`.
+33. **Ablation, PINN+ components (A, seed 0, interp / near):** all on 6.2% / 36.3%; no Fourier features 114.6% / 157.6%; no causal 7.5% / 40.2%; no adaptive weights 6.2% / 35.6%. See `fig_ablation_components`.
+34. **Ablation, PINN-strict collocation points (interp):** 10k 9.8%, 20k 8.3%, 50k 9.1%. **IC weight (interp / near):** w_ic=1 4.9% / 33.0%, w_ic=10 (used) 8.3% / 45.6%, w_ic=100 24.0% / 74.4%. w_ic was not tuned before the main study, so the PINNs could be somewhat better (single seed).
+35. **Ablation, data efficiency (interp, 2 / 4 / 6 training N):** DD-MLP 82.0% / 1.9% / 2.0%; cFNO 22.1% / 1.6% / 0.9%. The PINNs use no field data.
+36. **Ablation, training-range width:** see `fig_ablation_range_width` (error vs distance outside the training range, seeds 0-1). PINN-strict's curves for the three range widths nearly coincide, while the data-driven models trained on the narrow range degrade faster with distance.
+37. **Fine-tuning at A N=3:** starting at 134% error, the PINN did not reach its in-distribution error (8.3%) in 6000 steps; best 59.7% within 619 s of fine-tuning, final 60.5%. See `fig_finetune`.
+38. **Fine-tuning at A N=4:** starting at 135% error, the PINN did not reach its in-distribution error (8.3%) in 6000 steps; best 119.6% within 618 s of fine-tuning, final 120.3%. See `fig_finetune`.
+39. **Fine-tuning at B_sech N=2:** starting at 137% error, the PINN did not reach its in-distribution error (19.5%) in 6000 steps; best 83.7% within 619 s of fine-tuning, final 84.4%. See `fig_finetune`.
+40. **Fine-tuning at B_sech N=3:** starting at 215% error, the PINN did not reach its in-distribution error (19.5%) in 6000 steps; best 95.6% within 809 s of fine-tuning, final 127.3%. See `fig_finetune`.
 
 ## Tables (generated by scripts/make_tables.py)
 
@@ -208,7 +217,8 @@ Main sweep: 84 completed runs, 0 diverged, 0 crashed jobs (see `runs/main/sweep_
   learned model on both speed and accuracy. In the harder anomalous-dispersion cases, an SSFM at the models' accuracy can
   be slower than model inference (see the SSFM finding), but it is never less accurate, and the models' training cost
   comes on top.
-* `fig_error_vs_spectral_shift` (analysis A), `fig_drift_vs_error` and `fig_energy_vs_phase` (analysis B).
+* `fig_error_vs_spectral_shift` and `fig_error_predictors_baselines` (analysis A: spectral and SPM-phase predictors
+  vs coordinate-only baselines), `fig_drift_vs_error` and `fig_energy_vs_phase` (analysis B).
 * `fig_ablation_range_width`, `fig_ablation_components`, `fig_finetune`: ablations and the optional extras.
 
 ## Limitations and threats to validity
@@ -224,8 +234,12 @@ Main sweep: 84 completed runs, 0 diverged, 0 crashed jobs (see `runs/main/sweep_
 * The complex-field rel-L2 saturates near ~1.4 once the phase is lost, so it under-reports differences in intensity
   and observables far from training. We therefore report intensity, spectral and energy metrics alongside it.
 * Equal optimizer steps is not equal wall-clock: the PINNs cost 3-5× more per run (cost table).
-* Analysis A's WF distance to the training spectra uses ground truth, so it explains error after the fact; only
-  the SPM phase N² asinh ξ is an a-priori predictor. Pooled correlations are partly driven by N and ξ, which
-  is why analysis B also reports a within-N test.
+* Analysis A's WF distance to the training spectra uses ground truth, so it explains error after the fact. The SPM
+  phase N² asinh ξ is a-priori, but it is a monotone function of N and ξ, and it does not beat coordinate-only
+  baselines (N²ξ, rank(N)+rank(ξ); in z-extrapolation sometimes not even ξ alone). Its correlation therefore mostly
+  reflects "error grows with N and ξ" (D-031). Pooled correlations are driven by N and ξ, which is why analysis B
+  also reports a within-N test.
+* An earlier version of analysis A silently dropped 12.4% of slices because of a float-merge bug; it was fixed and
+  re-run (D-031). The corrected numbers are within ~0.01 of the old ones.
 * Single physical model (lossless scalar NLSE, no higher-order effects) and a single grid per regime; results may
   not transfer to GNLSE or supercontinuum.

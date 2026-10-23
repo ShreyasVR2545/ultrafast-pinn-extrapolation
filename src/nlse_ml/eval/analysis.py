@@ -11,7 +11,9 @@ A. Spectral shift as an error predictor (extension of Fesser et al. 2023 to para
 B. Label-free error estimators: energy drift, Hamiltonian drift, grid PDE residual (and autograd
    residual for MLP models) vs true error, per (run, N).
 
-Statistics: Spearman rho per model, 95% CI by cluster bootstrap over (N, seed) groups.
+Statistics: Spearman rho per model (pooled and per regime), 95% CI by cluster bootstrap over
+(regime, N, seed) groups; phi_eff is compared against coordinate-only baselines (BASELINES), which it does
+not meaningfully beat (D-031).
 """
 from __future__ import annotations
 
@@ -55,6 +57,57 @@ def spectral_shift_table(regime: str) -> pd.DataFrame:
                          "wf_train_n": d_n[k], "wf_train_z": d_z[k], "phi_excess_n": exc_n[k],
                          "phi_excess_z": exc_z[k]})
     return pd.DataFrame(rows)
+
+
+PREDICTORS = ["wf_input", "phi_eff", "wf_train_n", "wf_train_z", "phi_excess_n", "phi_excess_z"]
+
+
+def merge_shift(slices: pd.DataFrame, shift: pd.DataFrame, decimals: int = 6) -> pd.DataFrame:
+    """Left-merge per-slice errors with the spectral-shift table on (regime, N, xi).
+
+    The keys are rounded to `decimals` on BOTH sides: the committed slice CSV stores xi rounded to 4
+    decimals while the shift table uses the raw np.linspace values (e.g. 0.7 vs 0.7000000000000001),
+    and an exact-float merge silently left 24 of 201 slices without predictors (DECISIONS D-031).
+    Raises if any predictor is missing after the merge.
+    """
+    a, b = slices.copy(), shift.copy()
+    for d in (a, b):
+        d["_xi"] = d["xi"].round(decimals)
+        d["_N"] = d["N"].round(decimals)
+    out = a.merge(b.drop(columns=["xi", "N"]), on=["regime", "_N", "_xi"], how="left").drop(columns=["_xi", "_N"])
+    missing = out[PREDICTORS].isna().any(axis=1)
+    if missing.any():
+        raise ValueError(f"{int(missing.sum())} rows have no spectral-shift predictors after the merge, e.g. "
+                         f"{out.loc[missing, ['regime', 'N', 'xi']].head(3).to_dict('records')}")
+    return out
+
+
+BASELINES = {  # trivial predictors that use only the coordinates (D-031)
+    "xi_only": lambda d: d["xi"],
+    "N_only": lambda d: d["N"],
+    "N2_xi": lambda d: d["N"] ** 2 * d["xi"],
+    "rank_N_plus_rank_xi": lambda d: d["N"].rank() + d["xi"].rank(),
+}
+
+
+def add_baselines(d: pd.DataFrame) -> pd.DataFrame:
+    """Baseline predictor columns, computed within the given group (ranks are group-local)."""
+    d = d.copy()
+    for k, f in BASELINES.items():
+        d[k] = f(d)
+    return d
+
+
+def spearman_diff_ci(df, x1, x2, y="err", cluster=("regime", "N", "seed"), n_boot=500, seed=0):
+    """rho(x1, y) - rho(x2, y) with a cluster-bootstrap 95% CI (same resamples for both)."""
+    groups = [g.index.values for _, g in df.groupby(list(cluster))]
+    r = lambda d: spearmanr(d[x1], d[y]).statistic - spearmanr(d[x2], d[y]).statistic
+    point = r(df)
+    rng = np.random.default_rng(seed)
+    boots = [r(df.loc[np.concatenate([groups[i] for i in rng.integers(0, len(groups), len(groups))])])
+             for _ in range(n_boot)]
+    lo, hi = np.percentile(boots, [2.5, 97.5])
+    return float(point), float(lo), float(hi)
 
 
 def spearman_ci(df: pd.DataFrame, x: str, y: str, cluster=("N", "seed"), n_boot=1000, seed=0):

@@ -30,7 +30,10 @@ pre-registered: test sets were fixed in git before any training, every model got
 4. **A classical split-step Fourier solver beats every learned model on accuracy, and is often faster than model
    *inference*.** Physics-only fine-tuning at the new condition does not close the gap.
 5. **Two diagnostics:**
-   - PINN error closely follows a closed-form physical quantity, the accumulated SPM phase *N²·asinh(ξ)*.
+   - Extrapolation error grows with N and ξ for every model. A physical spectral-shift measure predicts it *worse*
+     than simple combinations of N and ξ. The accumulated SPM phase *N²·asinh(ξ)* is at best marginally better (by
+     ≤ 0.03 in Spearman ρ, PINNs in N-extrapolation only) and worse in ξ-extrapolation. So neither is a physical
+     failure law (correction: `DECISIONS.md` D-031).
    - Energy-conservation drift is a usable *label-free* warning sign for bad predictions. The PDE residual is
      misleading when comparing different model families.
 
@@ -193,9 +196,16 @@ rates, and the ranking differs between regimes.*
 coarse-to-fine SSFM cost ladder for one field. For this 1-D problem the classical solver is the bar to beat.*
 
 ### Why do models fail where they do?
-- **Analysis A, spectral shift** ([`fig_error_vs_spectral_shift`](figures/fig_error_vs_spectral_shift.png)).
-  Extrapolation error correlates with how far the spectrum moves (Wasserstein-Fourier distance, after Fesser et al.
-  2023), and for PINNs especially with the closed-form accumulated SPM phase *N² asinh ξ*.
+- **Analysis A, spectral shift** ([`fig_error_vs_spectral_shift`](figures/fig_error_vs_spectral_shift.png),
+  [`fig_error_predictors_baselines`](figures/fig_error_predictors_baselines.png)).
+  - Error correlates with how far the spectrum moves (Wasserstein-Fourier distance to the training spectra, after
+    Fesser et al. 2023), but less strongly than with the simple coordinate combination rank(N)+rank(ξ), for every
+    model.
+  - The accumulated SPM phase *N² asinh ξ* correlates strongly in N-extrapolation, but only marginally differently
+    from coordinate-only baselines such as *N²ξ* or rank(N)+rank(ξ). In ξ-extrapolation it is worse than those
+    baselines for every model.
+  - So error grows monotonically with N and ξ, and these physical quantities add little beyond that. We do not
+    claim a physical failure law. The numbers are in `report/results_summary.md`; the correction is D-031.
 - **Analysis B, label-free error estimates** ([`fig_drift_vs_error`](figures/fig_drift_vs_error.png)). At a fixed N,
   the prediction with lower energy drift tends to be the more accurate one. The PDE residual is *anti*-correlated
   with error across model families in N-extrapolation: PINNs produce smooth, nearly PDE-consistent fields that are
