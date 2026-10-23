@@ -90,7 +90,7 @@
 
 ## Checkpoint 9: Novel analyses (2026-10-23)
 **Status:** done (A, B, and the optional fine-tuning; inverse retrieval skipped for time).
-- A: the closed-form SPM phase N² asinh ξ predicts PINN error (ρ ≈ 0.84-0.87) better than data-driven error (0.72-0.77). The WF distance to the training spectra is weaker (0.44-0.64). Extension of Fesser et al., not novel (D-012).
+- A: the closed-form SPM phase N² asinh ξ predicts PINN error (ρ ≈ 0.84-0.87) better than data-driven error (0.72-0.77) (superseded, see D-031). The WF distance to the training spectra is weaker (0.44-0.64). Extension of Fesser et al., not novel (D-012).
 - B: within a fixed N, energy drift ranks predictions by accuracy (ρ = 0.63 N-extrap, 0.74 z-extrap). The grid PDE residual is anti-correlated across model families in N-extrap (ρ = −0.30).
 - Fine-tuning (seed 0, 6000 physics-only L-BFGS steps, ~10-13 min): no case reaches the model's own in-distribution error (A N=3: 134% → 60%; A N=4: 135% → 120%). SSFM reaches that accuracy in milliseconds. Honest conclusion: SSFM wins.
 - Optional inverse retrieval (9.4): not done (time).
@@ -106,7 +106,7 @@ fig3 (paper Fig. 5): 2.97% ± 0.12% over 3 seeds, vs README 2.61%. fig7 (Fig. 9)
 2. Far extrapolation in N: every model fails on the complex field (phase lost). Physics-informed models stay physically plausible (lowest energy drift in all regimes, much better intensity and peak power than the DD-MLP).
 3. z-extrapolation: no model class wins in both regimes.
 4. SSFM at the models' accuracy costs milliseconds (Regime A) to ~0.2 s (hard Regime B cases), and is never less accurate. Physics-only fine-tuning at far N does not close the gap within ~10 min.
-5. Analysis A: the closed-form SPM phase predicts PINN error (ρ ≈ 0.85). Analysis B: energy drift is a usable label-free error flag; the PDE residual misleads across model families.
+5. Analysis A: the closed-form SPM phase predicts PINN error (ρ ≈ 0.85) (superseded, see D-031). Analysis B: energy drift is a usable label-free error flag; the PDE residual misleads across model families.
 **Confidence:** the headline rankings are robust across 3 seeds (labelled in the summary); the smaller gaps are labelled not robust.
 **What failed or is missing:**
 - early PINN pilots (fixed, D-025 to D-030);
@@ -120,3 +120,6 @@ fig3 (paper Fig. 5): 2.97% ± 0.12% over 3 seeds, vs README 2.61%. fig7 (Fig. 9)
 - the complex-field metric saturates once the phase is lost;
 - analysis A's WF distance needs ground truth;
 - single physical model (scalar NLSE).
+
+## Correction (2026-10-23)
+An external reviewer reported three possible issues. After independent verification: the analysis A float-merge bug was confirmed and fixed (12.4% of rows had been dropped). The analysis A claim was partly confirmed as an overclaim: the SPM phase does not beat coordinate-only baselines, so it is withdrawn as a "failure law". The missing heatmap axis labels were confirmed and fixed. Analysis B and the main conclusions are unaffected. Details and before/after numbers are in DECISIONS.md D-031.
