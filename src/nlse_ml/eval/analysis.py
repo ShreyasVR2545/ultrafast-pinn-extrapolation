@@ -80,6 +80,34 @@ def merge_shift(slices: pd.DataFrame, shift: pd.DataFrame, decimals: int = 6) ->
     return out
 
 
+BASELINES = {  # trivial predictors that use only the coordinates (D-031)
+    "xi_only": lambda d: d["xi"],
+    "N_only": lambda d: d["N"],
+    "N2_xi": lambda d: d["N"] ** 2 * d["xi"],
+    "rank_N_plus_rank_xi": lambda d: d["N"].rank() + d["xi"].rank(),
+}
+
+
+def add_baselines(d: pd.DataFrame) -> pd.DataFrame:
+    """Baseline predictor columns, computed within the given group (ranks are group-local)."""
+    d = d.copy()
+    for k, f in BASELINES.items():
+        d[k] = f(d)
+    return d
+
+
+def spearman_diff_ci(df, x1, x2, y="err", cluster=("regime", "N", "seed"), n_boot=500, seed=0):
+    """rho(x1, y) - rho(x2, y) with a cluster-bootstrap 95% CI (same resamples for both)."""
+    groups = [g.index.values for _, g in df.groupby(list(cluster))]
+    r = lambda d: spearmanr(d[x1], d[y]).statistic - spearmanr(d[x2], d[y]).statistic
+    point = r(df)
+    rng = np.random.default_rng(seed)
+    boots = [r(df.loc[np.concatenate([groups[i] for i in rng.integers(0, len(groups), len(groups))])])
+             for _ in range(n_boot)]
+    lo, hi = np.percentile(boots, [2.5, 97.5])
+    return float(point), float(lo), float(hi)
+
+
 def spearman_ci(df: pd.DataFrame, x: str, y: str, cluster=("N", "seed"), n_boot=1000, seed=0):
     d = df[[x, y, *cluster]].replace([np.inf, -np.inf], np.nan).dropna()
     if len(d) < 5 or d[x].nunique() < 3:
